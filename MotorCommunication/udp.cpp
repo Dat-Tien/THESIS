@@ -512,16 +512,16 @@ bool udp::SAVEFILE(char *name, int length)
    delete [] buffer;
    return 1;
 }
-bool udp::LOADFILE(char name[], int length)
+bool udp::LOADFILE_REQUEST(char name[], int length)
 {
     TxDataFile dataFile;
     dataFile.data_size = length;
     dataFile.ack = 0;
     dataFile.id = 0;
     dataFile.block_no = 0;
-    dataFile.command_no = 0x15;
+    dataFile.command_no = 0;
     dataFile.attribute = 0;
-    dataFile.service = 0;
+    dataFile.service = 0x15;
     char *buffer = new  char[sizeof (dataFile)+ length];
     memcpy(buffer,&dataFile,sizeof (dataFile));
     memcpy(buffer + sizeof(dataFile),&name,length);
@@ -536,9 +536,9 @@ bool udp::DELETEFILE(char name[], int length)
     dataFile.ack = 0;
     dataFile.id = 0;
     dataFile.block_no = 0;
-    dataFile.command_no = 0x09;
+    dataFile.command_no = 0;
     dataFile.attribute = 0;
-    dataFile.service = 0;
+    dataFile.service = 0x09;
     char *buffer = new  char[sizeof (dataFile)+ length];
     memcpy(buffer,&dataFile,sizeof (dataFile));
     memcpy(buffer + sizeof(dataFile),&name,length);
@@ -581,7 +581,7 @@ QString udp::HEX2ASCII()
     Send = Send.remove(" ");
     QString strAscii = QByteArray::fromHex(Send.toLocal8Bit());
 
-    qDebug()<<strCharSend;
+
     return strAscii;
 }
 
@@ -601,6 +601,19 @@ bool udp::FILEACK(int blockNo)
     SendDataFile(buffer,sizeof(dataFile));
     delete [] buffer;
     return 1;
+}
+
+
+void udp::convert_hexa(char* input, char* output)
+{
+   int loop=0;
+   int i=0;
+   while(input[loop] != '\0'){
+      sprintf((char*)(output+i),"%02X", input[loop]);
+      loop+=1;
+      i+=2;
+   }
+  output[i++] = '\0';
 }
 //---------------------------------------------------------------------------
 

@@ -30,17 +30,19 @@ private:
 
     QString getValueAt(int ix, int jx);
 
+    uint32_t pre_blockNo;
+    int func;
 private slots:
     void realTimeDate();
-
 
     void on_btnSaveFile_clicked();
 
     void on_pushButtonOpenFile_clicked();
-    void on_pushButtonEXECUTE_clicked();
+
     void on_pushButtonGetFile_clicked();
 
     void ReadFile();
+    void on_btnLoadFile_clicked();
 };
 
 #endif // DIALOGFILE_H

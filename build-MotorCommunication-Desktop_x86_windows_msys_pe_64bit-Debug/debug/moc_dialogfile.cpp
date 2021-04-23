@@ -23,7 +23,7 @@ QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_DialogFile_t {
     QByteArrayData data[8];
-    char stringdata0[145];
+    char stringdata0[139];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -37,16 +37,16 @@ QT_MOC_LITERAL(1, 11, 12), // "realTimeDate"
 QT_MOC_LITERAL(2, 24, 0), // ""
 QT_MOC_LITERAL(3, 25, 22), // "on_btnSaveFile_clicked"
 QT_MOC_LITERAL(4, 48, 29), // "on_pushButtonOpenFile_clicked"
-QT_MOC_LITERAL(5, 78, 28), // "on_pushButtonEXECUTE_clicked"
-QT_MOC_LITERAL(6, 107, 28), // "on_pushButtonGetFile_clicked"
-QT_MOC_LITERAL(7, 136, 8) // "ReadFile"
+QT_MOC_LITERAL(5, 78, 28), // "on_pushButtonGetFile_clicked"
+QT_MOC_LITERAL(6, 107, 8), // "ReadFile"
+QT_MOC_LITERAL(7, 116, 22) // "on_btnLoadFile_clicked"
 
     },
     "DialogFile\0realTimeDate\0\0"
     "on_btnSaveFile_clicked\0"
     "on_pushButtonOpenFile_clicked\0"
-    "on_pushButtonEXECUTE_clicked\0"
-    "on_pushButtonGetFile_clicked\0ReadFile"
+    "on_pushButtonGetFile_clicked\0ReadFile\0"
+    "on_btnLoadFile_clicked"
 };
 #undef QT_MOC_LITERAL
 
@@ -91,9 +91,9 @@ void DialogFile::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 0: _t->realTimeDate(); break;
         case 1: _t->on_btnSaveFile_clicked(); break;
         case 2: _t->on_pushButtonOpenFile_clicked(); break;
-        case 3: _t->on_pushButtonEXECUTE_clicked(); break;
-        case 4: _t->on_pushButtonGetFile_clicked(); break;
-        case 5: _t->ReadFile(); break;
+        case 3: _t->on_pushButtonGetFile_clicked(); break;
+        case 4: _t->ReadFile(); break;
+        case 5: _t->on_btnLoadFile_clicked(); break;
         default: ;
         }
     }

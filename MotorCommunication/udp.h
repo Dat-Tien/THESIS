@@ -33,10 +33,12 @@ public:
     bool StartJob();
 
     bool SAVEFILE(char *name, int length);
-    bool LOADFILE(char name[],int length);
-    bool DELETEFILE(char name[],int length);
-    bool TransmitData(char data[], int blockNo, int length);
     bool FILEACK(int blockNo);
+
+    bool LOADFILE_REQUEST(char name[], int length);
+    bool TransmitData(char data[], int blockNo, int length);
+
+    bool DELETEFILE(char name[],int length);
 
 
 //---------------------------------------
@@ -70,6 +72,7 @@ public:
     void ReceiveData();
     void ReceiveDataFile();
     void run();
+    void convert_hexa(char*  input, char* output);
 //---------------------------------------
 
 
