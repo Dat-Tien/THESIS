@@ -28,10 +28,22 @@ private:
     QTime *time;
     QDate *date;
 
+
     QString getValueAt(int ix, int jx);
 
     uint32_t pre_blockNo;
+    uint32_t Check_blockNo_Send;
     int func;
+//    char arr[100];
+
+    void separateArr(int blockNo);
+
+    void CheckBlockNoReceive();
+    void CheckBlockNoSend();
+    void Transmitted_File(uint32_t blockNo);
+
+    std::vector<char> s;
+
 private slots:
     void realTimeDate();
 
@@ -43,6 +55,9 @@ private slots:
 
     void ReadFile();
     void on_btnLoadFile_clicked();
+
+
+    void on_pushButton_clicked();
 };
 
 #endif // DIALOGFILE_H

@@ -291,39 +291,7 @@ bool udp::OffServo()
 //----------------------------------------------------------------------------------
 
 //----------Get Postion Caresian/Pulse----------------------------------------------
-bool udp::GetPosCar()
-{
-    TxData sent_data;
-    char* buffer = new char[sizeof (sent_data)];
-    sent_data.id = 3;
-    sent_data.command_no = 0x75;
-    sent_data.instance = 0x65;
-    sent_data.attribute = 0;
-    sent_data.service = 0x01;
-    sent_data.data_size = 0;
-    memcpy(buffer,&sent_data,sizeof (sent_data));
-    SendData(buffer,sizeof (sent_data));
-    delete [] buffer;
-    qDebug()<<"Position";
-    return 1;
-}
-bool udp::GetPosPul()
-{
-    TxData sent_data;
-    char* buffer = new char[sizeof (sent_data)];
-    sent_data.id = 4;
-    sent_data.command_no = 0x75;
-    sent_data.instance = 0x01;
-    sent_data.attribute = 0;
-    sent_data.service = 0x01;
-    sent_data.data_size = 0;
 
-    memcpy(buffer,&sent_data,sizeof (sent_data));
-    SendData(buffer,sizeof (sent_data));
-    delete [] buffer;
-    qDebug()<<"Pulse";
-    return 1;
-}
 //----------------------------------------------------------------------------------
 void udp::run()
 {
@@ -378,7 +346,7 @@ bool udp::HomePos()
     Header.instance = 0x01;
     Header.attribute = 1;
     Header.service = 0x02;
-    Header.id = 7;
+    Header.id = RECEIVE_TYPE::HOME_POS;
 
 
     TxDataWritePosition Pos;
@@ -467,7 +435,7 @@ bool udp::SelectJob(char* jobname)
 {
     uint32_t line_number=0;
     TxData sent_data;
-    sent_data.id = 0x0A;
+    sent_data.id = RECEIVE_TYPE::SELECT_JOB;
     sent_data.command_no = 0x87;
     sent_data.instance = 1;
     sent_data.attribute = 1;
@@ -486,19 +454,31 @@ bool udp::SelectJob(char* jobname)
 }
 bool udp::StartJob()
 {
-    SendCommand(Hex2ByteArray(START_JOB));
+    TxData sent_data;
+    sent_data.id = RECEIVE_TYPE::START_JOB;
+    sent_data.command_no = 0x86;
+    sent_data.instance = 1;
+    sent_data.attribute = 1;
+    sent_data.service = 0x10;
+    uint32_t data = 1;
+    sent_data.data_size = sizeof (data);
+    char *buffer = new char[sizeof(sent_data)+ sizeof(data)];
+    memcpy(buffer,&sent_data,sizeof (sent_data));
+    memcpy(buffer+sizeof(sent_data),&data,sizeof(data));
+    SendData(buffer,sizeof(sent_data)+sizeof(data));
+    delete [] buffer;
     return 1;
 }
 //----------------------------------------------------------------------------------
 
 
 //--------------FILE---------------------------------------------------------
-bool udp::SAVEFILE(char *name, int length)
+bool udp::SAVEFILE(char *name, int length) // Save File from YERC
 {
    TxDataFile dataFile;
    dataFile.data_size = length;
    dataFile.ack = 0;
-   dataFile.id = 0;
+   dataFile.id = RECEIVE_TYPE::SAVE_FILE;
    dataFile.block_no = 0;
    dataFile.command_no = 0x00;
    dataFile.attribute = 0;
@@ -512,29 +492,88 @@ bool udp::SAVEFILE(char *name, int length)
    delete [] buffer;
    return 1;
 }
-bool udp::LOADFILE_REQUEST(char name[], int length)
+bool udp::FileBlockNoReceive(int blockNo) //Block No for load file from YERC
 {
     TxDataFile dataFile;
-    dataFile.data_size = length;
-    dataFile.ack = 0;
-    dataFile.id = 0;
-    dataFile.block_no = 0;
-    dataFile.command_no = 0;
+    dataFile.data_size = 0;
+    dataFile.ack = 1;
+    dataFile.id = RECEIVE_TYPE::SAVE_FILE;
+    dataFile.block_no = blockNo;
+    dataFile.command_no = 0x00;
     dataFile.attribute = 0;
-    dataFile.service = 0x15;
-    char *buffer = new  char[sizeof (dataFile)+ length];
+    dataFile.instance = 0;
+    dataFile.service = 0x16;
+    char *buffer = new  char[sizeof (dataFile)];
     memcpy(buffer,&dataFile,sizeof (dataFile));
-    memcpy(buffer + sizeof(dataFile),&name,length);
-    SendDataFile(buffer,sizeof(dataFile)+length);
+    SendDataFile(buffer,sizeof(dataFile));
     delete [] buffer;
     return 1;
 }
-bool udp::DELETEFILE(char name[], int length)
+//----------------------------------------------------------
+
+bool udp::LOADFILE_REQUEST(char *name, int length) // Load File from PC
 {
     TxDataFile dataFile;
     dataFile.data_size = length;
     dataFile.ack = 0;
+    dataFile.id = RECEIVE_TYPE::LOAD_FILE;
+    dataFile.block_no = 0;
+    dataFile.command_no = 0x00;
+    dataFile.attribute = 0;
+    dataFile.instance = 0;
+    dataFile.service = 0x15;
+    char *buffer = new  char[sizeof (dataFile)+ length];
+    memcpy(buffer,&dataFile,sizeof (dataFile));
+    memcpy(buffer + sizeof(dataFile),name,length);
+    SendDataFile(buffer,sizeof(dataFile)+length);
+
+    delete [] buffer;
+    return 1;
+}
+bool udp::TransmitData(char *data,int blockNo, int length) // Transmit Data from PC
+{
+    TxDataFile dataFile;
+    dataFile.data_size = length;
+    dataFile.ack = 1;
+    dataFile.id = RECEIVE_TYPE::LOAD_FILE;
+    dataFile.block_no = blockNo;
+    dataFile.command_no = 0;
+    dataFile.attribute = 0;
+    dataFile.instance = 0;
+    dataFile.service = 0x15;
+    char *buffer = new char[sizeof (dataFile)+ length];
+    memcpy(buffer,&dataFile,sizeof (dataFile));
+    memcpy(buffer + sizeof(dataFile),&data,length);
+    SendDataFile(buffer,sizeof(dataFile)+length);
+
+    delete [] buffer;
+    return 1;
+}
+bool udp::FileBlockNoSend(int blockNo) // Check Block no Transmit data from PC
+{
+    TxDataFile dataFile;
+    dataFile.data_size = 0;
+    dataFile.ack = 1;
     dataFile.id = 0;
+    dataFile.block_no = blockNo;
+    dataFile.command_no = 0x00;
+    dataFile.attribute = 0;
+    dataFile.instance = 0;
+    dataFile.service = 0x15;
+    char *buffer = new  char[sizeof (dataFile)];
+    memcpy(buffer,&dataFile,sizeof (dataFile));
+    SendDataFile(buffer,sizeof(dataFile));
+    delete [] buffer;
+    return 1;
+}
+
+//--------------------------------------------------------------------
+bool udp::DELETEFILE(char name[], int length) //Delete File
+{
+    TxDataFile dataFile;
+    dataFile.data_size = length;
+    dataFile.ack = 0;
+    dataFile.id = RECEIVE_TYPE::DELETE_FILE;
     dataFile.block_no = 0;
     dataFile.command_no = 0;
     dataFile.attribute = 0;
@@ -546,23 +585,20 @@ bool udp::DELETEFILE(char name[], int length)
     delete [] buffer;
     return 1;
 }
-bool udp::TransmitData(char data[],int blockNo, int length)
-{
-    TxDataFile dataFile;
-    dataFile.data_size = length;
-    dataFile.ack = 0;
-    dataFile.id = 0;
-    dataFile.block_no = blockNo;
-    dataFile.command_no = 0x15;
-    dataFile.attribute = 0;
-    dataFile.service = 0;
-    char *buffer = new  char[sizeof (dataFile)+ length];
-    memcpy(buffer,&dataFile,sizeof (dataFile));
-    memcpy(buffer + sizeof(dataFile),&data,length);
-    SendDataFile(buffer,sizeof(dataFile)+length);
-    delete [] buffer;
-    return 1;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 QString udp::HEX2ASCII()
 {
@@ -585,23 +621,7 @@ QString udp::HEX2ASCII()
     return strAscii;
 }
 
-bool udp::FILEACK(int blockNo)
-{
-    TxDataFile dataFile;
-    dataFile.data_size = 0;
-    dataFile.ack = 1;
-    dataFile.id = 0;
-    dataFile.block_no = blockNo;
-    dataFile.command_no = 0x00;
-    dataFile.attribute = 0;
-    dataFile.instance = 0;
-    dataFile.service = 0x16;
-    char *buffer = new  char[sizeof (dataFile)];
-    memcpy(buffer,&dataFile,sizeof (dataFile));
-    SendDataFile(buffer,sizeof(dataFile));
-    delete [] buffer;
-    return 1;
-}
+
 
 
 void udp::convert_hexa(char* input, char* output)
@@ -615,6 +635,8 @@ void udp::convert_hexa(char* input, char* output)
    }
   output[i++] = '\0';
 }
+
+
 //---------------------------------------------------------------------------
 
 
@@ -630,5 +652,5 @@ const QString udp::OFF_SERVO_CMD =    "59 45 52 43 20 00 04 00 03 01 00 01 00 00
 const QString udp::GET_POS_CMD =      "59 45 52 43 20 00 00 00 03 01 00 02 00 00 00 00 39 39 39 39 39 39 39 39 75 00 65 00 00 01 00 00";
 const QString udp::GET_POS_PULSE =    "59 45 52 43 20 00 00 00 03 01 00 03 00 00 00 00 39 39 39 39 39 39 39 39 75 00 01 00 00 01 00 00";
 const QString udp::WRITE_POS_HEADER = "59 45 52 43 20 00 68 00 03 01 00 04 00 00 00 00 39 39 39 39 39 39 39 39 8A 00 01 00 01 02 00 00 01 00 00 00 00 00 00 00 00 00 00 00";
-const QString udp::SAVE_FILE =        "59 45 52 43 20 00 0A 00 03 02 00 0F 00 00 00 00 39 39 39 39 39 39 39 39 00 00 00 00 00 16 00 00 50 49 43 4B 41 39 2E 4A 42 49";
-const QString udp::START_JOB = "59 45 52 43 20 00 04 00 03 01 00 09 00 00 00 00 39 39 39 39 39 39 39 39 86 00 01 00 01 10 00 00 01 00 00 00";
+//const QString udp::SAVE_FILE =        "59 45 52 43 20 00 0A 00 03 02 00 0F 00 00 00 00 39 39 39 39 39 39 39 39 00 00 00 00 00 16 00 00 50 49 43 4B 41 39 2E 4A 42 49";
+//const QString udp::START_JOB = "59 45 52 43 20 00 04 00 03 01 00 09 00 00 00 00 39 39 39 39 39 39 39 39 86 00 01 00 01 10 00 00 01 00 00 00";

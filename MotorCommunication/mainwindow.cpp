@@ -21,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowIcon(QIcon("C:/Users/TD/Desktop/Yaskawa/Qt_Controller/MotorCommunication/motomini.png"));
     connect(ui->btnQuit,SIGNAL(clicked()),this,SLOT(close()));
     startPos = new QTimer(this);
-    startPos->setInterval(50);
+    startPos->setInterval(20);
     connect(startPos,SIGNAL(timeout()),this,SLOT(Thread_Pos()));   
     table = ui->tableWidgetPoints;
     count = 0;
@@ -113,7 +113,7 @@ void MainWindow::on_btnConnected_clicked()
         socket = new udp(h,p);       
         socket->ConnectMotoman();        
         connect(socket->client,SIGNAL(readyRead()),this,SLOT(Read()));
-//        startPos->start();
+        startPos->start();
 
     }
     else
@@ -994,6 +994,8 @@ void MainWindow::on_btnJobExec_clicked()
     file.setModal(true);
     file.getValueTable(TableValue(table->rowCount()),table->rowCount());
     file.exec();
+    startPos->stop();
+
 }
 std::vector<QString> MainWindow::TableValue(int row)
 {

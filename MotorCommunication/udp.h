@@ -13,7 +13,8 @@ public:
     udp(QHostAddress h,quint16 p);
     ~udp();
 
-    enum RECEIVE_TYPE  {ON_SERVO = 0x00, OFF_SERVO = 0x01, GET_POSITION = 0x02, GET_PULSE = 0x03, WRITE_POSITION = 0x04, WRITE_PUSLE = 0x05};
+    enum RECEIVE_TYPE  {ON_SERVO = 0x00, OFF_SERVO = 0x01, GET_POSITION = 0x02, GET_PULSE = 0x03, WRITE_POSITION = 0x04, WRITE_PUSLE = 0x05,
+                        SELECT_JOB = 0x06, START_JOB = 0x07,HOME_POS = 0x08,SAVE_FILE = 0x09,LOAD_FILE = 0x0A,DELETE_FILE = 0x0B};
 
 
 //--------BOOL---------------------------
@@ -21,8 +22,6 @@ public:
     bool DisconnectMotoman();
     bool OnServo();
     bool OffServo();
-    bool GetPosCar();
-    bool GetPosPul();
     bool SendData(char* buffer, int lenght);
     bool SendDataFile (char* buffer, int lenght);
     bool HomePos();
@@ -33,10 +32,12 @@ public:
     bool StartJob();
 
     bool SAVEFILE(char *name, int length);
-    bool FILEACK(int blockNo);
+    bool FileBlockNoReceive(int blockNo);
 
-    bool LOADFILE_REQUEST(char name[], int length);
-    bool TransmitData(char data[], int blockNo, int length);
+    bool FileBlockNoSend(int blockNo);
+
+    bool LOADFILE_REQUEST(char *name, int length);
+    bool TransmitData(char *data, int blockNo, int length);
 
     bool DELETEFILE(char name[],int length);
 
@@ -98,8 +99,7 @@ protected:
 
      static const QString HOME_POSITION;
      static const QString WRITE_POS_HEADER;
-     static const QString SAVE_FILE;
-     static const QString START_JOB;
+
 
 private slots:
      void ReadPos();

@@ -33,6 +33,14 @@ DialogFile::DialogFile(QWidget *parent) :
     func =0;
 
     pre_blockNo = 0x80000000;
+    QString s1  = "0x01";
+    uint32_t a = s1.toUInt(nullptr,16);
+    qDebug()<<a;
+    Check_blockNo_Send = 0x80000000;
+
+      std::vector<char> s;
+
+
 
 }
 
@@ -141,84 +149,221 @@ void DialogFile::on_pushButtonGetFile_clicked()
     char job[name.length()];
     strcpy(job,name.toStdString().c_str());
     socket->SAVEFILE(job,name.length());
-    func =1;
-
-
-
 }
 
 void DialogFile::ReadFile()
 {
     socket->ReceiveDataFile();
     ui->plainTextEdit->appendPlainText(socket->HEX2ASCII());
+    qDebug()<<socket->rx_dataFile;
+    QString checkBlock;
+    checkBlock.push_back(socket->rx_dataFile.at(72));
+    checkBlock.push_back(socket->rx_dataFile.at(73));
 
-    switch (func)
-    {
-        case 1:
-        QString s;
-        s.append(socket->rx_dataFile.at(45));
-        s.append(socket->rx_dataFile.at(46));
-        s.append(socket->rx_dataFile.at(42));
-        s.append(socket->rx_dataFile.at(43));
-        s.append(socket->rx_dataFile.at(39));
-        s.append(socket->rx_dataFile.at(40));
-        s.append(socket->rx_dataFile.at(36));
-        s.append(socket->rx_dataFile.at(37));
-        uint32_t block = s.toUInt(nullptr,16);
-        if(block - pre_blockNo != 1 )
-        {
-            socket->FILEACK(block);
-            pre_blockNo += block;
-        }
-        else
-        {
-            socket->FILEACK(block);
-            pre_blockNo = 0x80000000;
-
-        }
-        func = 0;
+    switch(checkBlock.toInt()){
+    case 96:
+        CheckBlockNoReceive();
+        break;
+    case 95:
+        CheckBlockNoSend();
         break;
     }
+
 
 }
 
 
 void DialogFile::on_btnLoadFile_clicked()
 {
-        auto filename = QFileDialog::getOpenFileName(this,"open file",
-                                           QDir::homePath(), "JBI File (*.JBI)");
-//        QMessageBox::information(this,"..",filename);
-        if(filename.isEmpty())
-        {
-            return;
-        }
-        QFile file(filename);
-        if(!file.open(QFile::ReadOnly | QFile::Text))
-        {
-            return;
-        }
-        QTextStream in(&file);
-        QString line =in.readAll();
-        while (!in.atEnd())
-        {
-            QString line = in.readAll();
+    QString name = ui->textEditJOBNAME->toPlainText();
+    char job[name.length()];
+    strcpy(job,name.toStdString().c_str());
+    socket->LOADFILE_REQUEST(job,name.length());
+
+
+}
+
+void DialogFile::separateArr(int blockNo)
+{
+
+//    int solancat;
+//    int chuoicuoi;
+//    int length = s.size();
+//    if(length%100 == 0){
+//        solancat = length/100;
+//        chuoicuoi = 0;
+//    }
+//    else{
+//        solancat = length/100;
+//        chuoicuoi = length%100;
+//    }
+
+
+//    if(chuoicuoi!=0){
+
+//        for(int i = 0;i<solancat+1;i++){
+//            if(i < solancat){
+//                for(int jx = i*100;jx<100*(i+1);jx++){
+//                    if(i!=0){
+//                         arr[jx-i*100] = s[jx];
+//                    }
+//                    else{
+//                         arr[jx] = s[jx];
+//                    }
+//                }
+
+//                 blockNo++;
+
+
+//                qDebug()<<socket->rx_dataFile;
+//            }
+//            else{
+//                char arr1[chuoicuoi];
+//                for(int jx = i*100;jx<i*100 + chuoicuoi;jx++){
+//                   arr1[jx-i*100] = s[jx];
+//                }
+//            }
+
+
+//        }
+//    }
+
+
+
+}
+
+
+
+
+void DialogFile::CheckBlockNoReceive()
+{
+    QString s;
+    s.append(socket->rx_dataFile.at(45));
+    s.append(socket->rx_dataFile.at(46));
+    s.append(socket->rx_dataFile.at(42));
+    s.append(socket->rx_dataFile.at(43));
+    s.append(socket->rx_dataFile.at(39));
+    s.append(socket->rx_dataFile.at(40));
+    s.append(socket->rx_dataFile.at(36));
+    s.append(socket->rx_dataFile.at(37));
+    uint32_t block = s.toUInt(nullptr,16);
+
+    if(block - pre_blockNo != 1)
+    {
+
+        socket->FileBlockNoReceive(block);
+        block++;
+        pre_blockNo += block;
+
+    }
+    else
+    {
+        socket->FileBlockNoReceive(block);
+        pre_blockNo = 0x80000000;
+        func = 0;
+    }
+
+}
+
+void DialogFile::CheckBlockNoSend()
+{
+    QString s;
+    s.append(socket->rx_dataFile.at(45));
+    s.append(socket->rx_dataFile.at(46));
+    s.append(socket->rx_dataFile.at(42));
+    s.append(socket->rx_dataFile.at(43));
+    s.append(socket->rx_dataFile.at(39));
+    s.append(socket->rx_dataFile.at(40));
+    s.append(socket->rx_dataFile.at(36));
+    s.append(socket->rx_dataFile.at(37));
+    uint32_t block = s.toUInt(nullptr,16);
+
+    if(block != Check_blockNo_Send){
+        Transmitted_File(block+1);
+        qDebug()<<Check_blockNo_Send;
+
+    }
+    else{
+        Check_blockNo_Send =0x80000000;
+        socket->DisconnectMotoman();
+        qDebug()<<"Done!!!"<<" "<<Check_blockNo_Send;
+    }
+
+}
+
+
+void DialogFile::Transmitted_File(uint32_t blockNo){
+
+    Check_blockNo_Send+=0x01;
+    uint32_t solancat;
+    uint32_t chuoicuoi;
+    uint32_t length = s.size();
+    if(length%100 == 0){
+        solancat = length/32;
+        chuoicuoi = 0;
+    }
+    else{
+        solancat = length/32;
+        chuoicuoi = length%32;
+    }
+    qDebug()<<"so lan cat chuoi "<<solancat<<" "<<"do dai chuoi cuoi "<<chuoicuoi;
+    if(blockNo <solancat+1){// truyen chuoi tu dau den truoc chuoi cuoi cung
+
+        char *arr = new char;
+        for(uint32_t ix = (blockNo-1)*32; ix<blockNo*32;ix++){
+            if(blockNo == 1){
+                arr[ix]= s.at(ix);
+            }
+            else{
+                arr[ix - (blockNo-1)*32] = s.at(ix);
+            }
 
         }
-        file.close();
-
-        char strLine [line.size()];
-        strcpy(strLine,line.toStdString().c_str());
-        char strChar [line.size()];
-        for(int i =0;i<line.size();i++)
-        {
-            strChar[i] = strLine[i];
+        qDebug()<<blockNo;
+        qDebug()<<arr;
+        socket->TransmitData(arr,blockNo,32);
+    }
+    if(blockNo == solancat+1){// truyen chuoi cuoi cung
+        char *arr = new  char;
+        for(uint32_t ix = (blockNo-1)*32;ix < (blockNo-1)*32+chuoicuoi-1;ix++){
+            arr[ix - blockNo*32] = s.at(ix);
         }
-//        qDebug()<<line;
-//        qDebug()<<strChar;
-        char HexVal[line.size()*2 + 1];
-        socket->convert_hexa(strChar,HexVal);
-        qDebug()<<HexVal;
-        qDebug()<<filename<<" "<<filename.size();
 
-//        socket->SAVEFILE(filename,filename.size());
+        socket->TransmitData(arr,Check_blockNo_Send,chuoicuoi);
+        qDebug()<<arr;
+    }
+}
+
+void DialogFile::on_pushButton_clicked()
+{
+    auto filename = QFileDialog::getOpenFileName(this,"open file",
+                                       QDir::homePath(), "JBI File (*.JBI)");
+
+    if(filename.isEmpty())
+    {
+        return;
+    }
+    QFile file(filename);
+    if(!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        return;
+    }
+    QTextStream in(&file);
+    QString line =in.readAll();
+    file.close();
+    char strLine [line.size()];
+    strcpy(strLine,line.toStdString().c_str());
+    char strChar [line.size()];
+    for(int i =0;i<line.size();i++)
+    {
+        strChar[i] = strLine[i];
+    }
+
+    for(uint i = 0; i < sizeof (strChar)/sizeof(char);i++){
+            if(strChar[i] != '\n'){
+                s.push_back(strChar[i]);
+           }
+//        s.push_back(strChar[i]);
+    }
+    qDebug()<<s;
 }
