@@ -37,9 +37,9 @@ public:
     bool FileBlockNoSend(int blockNo);
 
     bool LOADFILE_REQUEST(char *name, int length);
-    bool TransmitData(char *data, int blockNo, int length);
+    bool TransmitData(char data[], int blockNo, int length);
 
-    bool DELETEFILE(char name[],int length);
+    bool DELETEFILE(char *name,int length);
 
 
 //---------------------------------------
@@ -53,7 +53,7 @@ public:
      QString tx_data;
      QString rx_data;
      QString rx_dataFile;
-     QString HEX2ASCII();
+     QString HEX2ASCII(QString rxdataFile);
 //---------------------------------------
 
 //-------QByteArray----------------------

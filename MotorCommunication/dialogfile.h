@@ -33,16 +33,20 @@ private:
 
     uint32_t pre_blockNo;
     uint32_t Check_blockNo_Send;
-    int func;
-//    char arr[100];
 
-    void separateArr(int blockNo);
+
+
 
     void CheckBlockNoReceive();
     void CheckBlockNoSend();
     void Transmitted_File(uint32_t blockNo);
 
+    void ReadLine();
+
     std::vector<char> s;
+
+    bool CheckACK;
+
 
 private slots:
     void realTimeDate();
@@ -58,6 +62,7 @@ private slots:
 
 
     void on_pushButton_clicked();
+    void on_pushButtonDeleteFile_clicked();
 };
 
 #endif // DIALOGFILE_H

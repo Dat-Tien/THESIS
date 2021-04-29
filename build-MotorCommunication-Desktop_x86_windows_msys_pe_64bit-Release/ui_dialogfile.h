@@ -37,6 +37,7 @@ public:
     QPushButton *pushButtonOpenFile;
     QTextEdit *textEditJOBNAME;
     QPushButton *pushButton;
+    QPushButton *pushButtonDeleteFile;
 
     void setupUi(QDialog *DialogFile)
     {
@@ -87,6 +88,9 @@ public:
         pushButton = new QPushButton(groupBox);
         pushButton->setObjectName(QString::fromUtf8("pushButton"));
         pushButton->setGeometry(QRect(390, 250, 75, 23));
+        pushButtonDeleteFile = new QPushButton(groupBox);
+        pushButtonDeleteFile->setObjectName(QString::fromUtf8("pushButtonDeleteFile"));
+        pushButtonDeleteFile->setGeometry(QRect(390, 220, 75, 23));
 
         horizontalLayout_3->addWidget(groupBox);
 
@@ -110,7 +114,8 @@ public:
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">PICK.JBI</p></body></html>", nullptr));
-        pushButton->setText(QCoreApplication::translate("DialogFile", "PushButton", nullptr));
+        pushButton->setText(QCoreApplication::translate("DialogFile", "load Data", nullptr));
+        pushButtonDeleteFile->setText(QCoreApplication::translate("DialogFile", "Delete", nullptr));
     } // retranslateUi
 
 };

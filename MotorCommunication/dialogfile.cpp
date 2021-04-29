@@ -30,12 +30,13 @@ DialogFile::DialogFile(QWidget *parent) :
     connect(socket->client,SIGNAL(readyRead()),this,SLOT(ReadFile()));
 
 
-    func =0;
+
 
     pre_blockNo = 0x80000000;
+//    qDebug()<<pre_blockNo+0x0B;
     QString s1  = "0x01";
     uint32_t a = s1.toUInt(nullptr,16);
-    qDebug()<<a;
+//    qDebug()<<a;
     Check_blockNo_Send = 0x80000000;
 
       std::vector<char> s;
@@ -144,17 +145,23 @@ void DialogFile::on_pushButtonOpenFile_clicked()
 
 void DialogFile::on_pushButtonGetFile_clicked()
 {
-    ui->plainTextEdit->clear();
-    QString name = ui->textEditJOBNAME->toPlainText();
-    char job[name.length()];
-    strcpy(job,name.toStdString().c_str());
-    socket->SAVEFILE(job,name.length());
+
+    CheckACK = true;
+    if(CheckACK == true){
+        ui->plainTextEdit->clear();
+        QString name = ui->textEditJOBNAME->toPlainText();
+        char job[name.length()];
+        strcpy(job,name.toStdString().c_str());
+        socket->SAVEFILE(job,name.length());
+
+    }
 }
 
 void DialogFile::ReadFile()
 {
     socket->ReceiveDataFile();
-    ui->plainTextEdit->appendPlainText(socket->HEX2ASCII());
+
+    qDebug()<<"--------------------------------------------";
     qDebug()<<socket->rx_dataFile;
     QString checkBlock;
     checkBlock.push_back(socket->rx_dataFile.at(72));
@@ -162,6 +169,7 @@ void DialogFile::ReadFile()
 
     switch(checkBlock.toInt()){
     case 96:
+        ui->plainTextEdit->appendPlainText(socket->HEX2ASCII(socket->rx_dataFile));
         CheckBlockNoReceive();
         break;
     case 95:
@@ -183,54 +191,6 @@ void DialogFile::on_btnLoadFile_clicked()
 
 }
 
-void DialogFile::separateArr(int blockNo)
-{
-
-//    int solancat;
-//    int chuoicuoi;
-//    int length = s.size();
-//    if(length%100 == 0){
-//        solancat = length/100;
-//        chuoicuoi = 0;
-//    }
-//    else{
-//        solancat = length/100;
-//        chuoicuoi = length%100;
-//    }
-
-
-//    if(chuoicuoi!=0){
-
-//        for(int i = 0;i<solancat+1;i++){
-//            if(i < solancat){
-//                for(int jx = i*100;jx<100*(i+1);jx++){
-//                    if(i!=0){
-//                         arr[jx-i*100] = s[jx];
-//                    }
-//                    else{
-//                         arr[jx] = s[jx];
-//                    }
-//                }
-
-//                 blockNo++;
-
-
-//                qDebug()<<socket->rx_dataFile;
-//            }
-//            else{
-//                char arr1[chuoicuoi];
-//                for(int jx = i*100;jx<i*100 + chuoicuoi;jx++){
-//                   arr1[jx-i*100] = s[jx];
-//                }
-//            }
-
-
-//        }
-//    }
-
-
-
-}
 
 
 
@@ -254,13 +214,14 @@ void DialogFile::CheckBlockNoReceive()
         socket->FileBlockNoReceive(block);
         block++;
         pre_blockNo += block;
+        qDebug()<<"---------------------------------------";
 
     }
     else
     {
         socket->FileBlockNoReceive(block);
         pre_blockNo = 0x80000000;
-        func = 0;
+        CheckACK = false;
     }
 
 }
@@ -277,7 +238,7 @@ void DialogFile::CheckBlockNoSend()
     s.append(socket->rx_dataFile.at(36));
     s.append(socket->rx_dataFile.at(37));
     uint32_t block = s.toUInt(nullptr,16);
-
+    qDebug()<<block;
     if(block != Check_blockNo_Send){
         Transmitted_File(block+1);
         qDebug()<<Check_blockNo_Send;
@@ -285,8 +246,9 @@ void DialogFile::CheckBlockNoSend()
     }
     else{
         Check_blockNo_Send =0x80000000;
-        socket->DisconnectMotoman();
+
         qDebug()<<"Done!!!"<<" "<<Check_blockNo_Send;
+        s.resize(0);
     }
 
 }
@@ -306,32 +268,40 @@ void DialogFile::Transmitted_File(uint32_t blockNo){
         solancat = length/32;
         chuoicuoi = length%32;
     }
-    qDebug()<<"so lan cat chuoi "<<solancat<<" "<<"do dai chuoi cuoi "<<chuoicuoi;
-    if(blockNo <solancat+1){// truyen chuoi tu dau den truoc chuoi cuoi cung
 
-        char *arr = new char;
+    if(blockNo < solancat+1){// truyen chuoi tu dau den truoc chuoi cuoi cung
+        int i = 0;
+        char arr[32];
         for(uint32_t ix = (blockNo-1)*32; ix<blockNo*32;ix++){
             if(blockNo == 1){
                 arr[ix]= s.at(ix);
+                i++;
             }
             else{
                 arr[ix - (blockNo-1)*32] = s.at(ix);
+                i++;
             }
 
         }
-        qDebug()<<blockNo;
-        qDebug()<<arr;
+         qDebug()<<"chuoi truyen vao la: "<<arr;
+        qDebug()<<"block ke tiep: "<<blockNo;
+        qDebug()<<"data part size "<<i;
         socket->TransmitData(arr,blockNo,32);
     }
     if(blockNo == solancat+1){// truyen chuoi cuoi cung
-        char *arr = new  char;
-        for(uint32_t ix = (blockNo-1)*32;ix < (blockNo-1)*32+chuoicuoi-1;ix++){
-            arr[ix - blockNo*32] = s.at(ix);
+        int i = 0;
+        char arr[chuoicuoi];
+        for(uint32_t ix = (blockNo-1)*32;ix < (blockNo-1)*32+chuoicuoi;ix++){
+            arr[ix - (blockNo-1)*32] = s.at(ix);
+            i++;
         }
+        qDebug()<<"chuoi truyen vao la: "<<arr;
+        qDebug()<<"blockNo cuoi cung: "<<Check_blockNo_Send;
+        qDebug()<<"Data part size: "<<i;
+        socket->TransmitData(arr,blockNo+0x80000000,chuoicuoi);
 
-        socket->TransmitData(arr,Check_blockNo_Send,chuoicuoi);
-        qDebug()<<arr;
     }
+
 }
 
 void DialogFile::on_pushButton_clicked()
@@ -359,11 +329,55 @@ void DialogFile::on_pushButton_clicked()
         strChar[i] = strLine[i];
     }
 
+    s.resize(0);
     for(uint i = 0; i < sizeof (strChar)/sizeof(char);i++){
-            if(strChar[i] != '\n'){
-                s.push_back(strChar[i]);
-           }
-//        s.push_back(strChar[i]);
+//            if(strChar[i] != '\n'){
+//                s.push_back(strChar[i]);
+//           }
+        s.push_back(strChar[i]);
     }
-    qDebug()<<s;
+//    qDebug()<<s;
+    ReadLine();
+
+}
+
+void DialogFile::ReadLine()
+{
+    int dong = 0;
+    for(uint i = 0;i<s.size();i++){
+        if(s.at(i)=='\n'){
+            dong++;
+        }
+    }
+    qDebug()<<dong;
+
+
+     char a[dong][s.size()];
+     for(int i = 0;i<dong;i++){
+         for(uint j = 0;j<s.size();j++){
+             if(s.at(j)!='\n'){
+                 a[i][j] = s.at(j);
+
+
+             }
+             else{
+                 break;
+             }
+         }
+     }
+
+
+}
+
+
+
+void DialogFile::on_pushButtonDeleteFile_clicked()
+{
+    QString a1 = ui->textEditJOBNAME->toPlainText();
+    char job[a1.length()];
+    strcpy(job,a1.toStdString().c_str());
+    socket->DELETEFILE(job,a1.length());
+    qDebug()<<a1.length();
+    qDebug()<<a1;
+
 }

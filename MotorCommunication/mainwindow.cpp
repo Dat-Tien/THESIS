@@ -21,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowIcon(QIcon("C:/Users/TD/Desktop/Yaskawa/Qt_Controller/MotorCommunication/motomini.png"));
     connect(ui->btnQuit,SIGNAL(clicked()),this,SLOT(close()));
     startPos = new QTimer(this);
-    startPos->setInterval(20);
+    startPos->setInterval(14);
     connect(startPos,SIGNAL(timeout()),this,SLOT(Thread_Pos()));   
     table = ui->tableWidgetPoints;
     count = 0;

@@ -123,7 +123,20 @@ p, li { white-space: pre-wrap; }
        </rect>
       </property>
       <property name="text">
-       <string>PushButton</string>
+       <string>load Data</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButtonDeleteFile">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>220</y>
+        <width>75</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Delete</string>
       </property>
      </widget>
     </widget>

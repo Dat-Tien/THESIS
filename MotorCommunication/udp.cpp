@@ -530,7 +530,7 @@ bool udp::LOADFILE_REQUEST(char *name, int length) // Load File from PC
     delete [] buffer;
     return 1;
 }
-bool udp::TransmitData(char *data,int blockNo, int length) // Transmit Data from PC
+bool udp::TransmitData(char data[],int blockNo, int length) // Transmit Data from PC
 {
     TxDataFile dataFile;
     dataFile.data_size = length;
@@ -545,6 +545,8 @@ bool udp::TransmitData(char *data,int blockNo, int length) // Transmit Data from
     memcpy(buffer,&dataFile,sizeof (dataFile));
     memcpy(buffer + sizeof(dataFile),&data,length);
     SendDataFile(buffer,sizeof(dataFile)+length);
+
+
 
     delete [] buffer;
     return 1;
@@ -568,20 +570,22 @@ bool udp::FileBlockNoSend(int blockNo) // Check Block no Transmit data from PC
 }
 
 //--------------------------------------------------------------------
-bool udp::DELETEFILE(char name[], int length) //Delete File
+bool udp::DELETEFILE(char *name, int length) //Delete File
 {
     TxDataFile dataFile;
     dataFile.data_size = length;
     dataFile.ack = 0;
     dataFile.id = RECEIVE_TYPE::DELETE_FILE;
     dataFile.block_no = 0;
-    dataFile.command_no = 0;
+    dataFile.command_no = 0x00;
     dataFile.attribute = 0;
+    dataFile.instance = 0;
     dataFile.service = 0x09;
     char *buffer = new  char[sizeof (dataFile)+ length];
     memcpy(buffer,&dataFile,sizeof (dataFile));
-    memcpy(buffer + sizeof(dataFile),&name,length);
+    memcpy(buffer + sizeof(dataFile),name,length);
     SendDataFile(buffer,sizeof(dataFile)+length);
+
     delete [] buffer;
     return 1;
 }
@@ -600,12 +604,12 @@ bool udp::DELETEFILE(char name[], int length) //Delete File
 
 
 
-QString udp::HEX2ASCII()
+QString udp::HEX2ASCII(QString rxdataFile)
 {
 
 //    QByteArray *buffer = rx_bufferFile;
 //    QString strHex = QString::fromLocal8Bit(*buffer);
-    QString str = rx_dataFile;
+    QString str = rxdataFile;
     char strChar[str.length()];
     char strCharSend[str.length()-32];
     strcpy(strChar,str.toStdString().c_str());
@@ -619,6 +623,7 @@ QString udp::HEX2ASCII()
 
 
     return strAscii;
+
 }
 
 
