@@ -4,18 +4,18 @@
 
 #include <QUdpSocket>
 #include <QThread>
-#include <QObject>
 #include <QTimer>
-
+#include <QCoreApplication>
 class udp : public QThread
 {
+    Q_OBJECT
 public:
     udp(QHostAddress h,quint16 p);
     ~udp();
 
     enum RECEIVE_TYPE  {ON_SERVO = 0x00, OFF_SERVO = 0x01, GET_POSITION = 0x02, GET_PULSE = 0x03, WRITE_POSITION = 0x04, WRITE_PUSLE = 0x05,
-                        SELECT_JOB = 0x06, START_JOB = 0x07,HOME_POS = 0x08,SAVE_FILE = 0x09,LOAD_FILE = 0x0A,DELETE_FILE = 0x0B};
-
+                        SELECT_JOB = 0x06, START_JOB = 0x07,HOME_POS = 0x08,SAVE_FILE = 0x09,LOAD_FILE = 0x0A,DELETE_FILE = 0x0B,
+                        GET_VARPOS =0x0C,WRITE_VARPOS = 0x0D, WRITE_BYTE = 0x0E};
 
 //--------BOOL---------------------------
     bool ConnectMotoman();
@@ -25,6 +25,8 @@ public:
     bool SendData(char* buffer, int lenght);
     bool SendDataFile (char* buffer, int lenght);
     bool HomePos();
+    bool GetCartasianPos();
+    bool GetPulsePos();
     bool WritePosCar(int32_t speed,int32_t X,int32_t Y,int32_t Z,int32_t RX,int32_t RY,int32_t RZ);
     bool WritePosPulse(int32_t speed,int32_t R1,int32_t R2,int32_t R3,int32_t R4,int32_t R5,int32_t R6);
 
@@ -40,6 +42,20 @@ public:
     bool TransmitData(char data[], int blockNo, int length);
 
     bool DELETEFILE(char *name,int length);
+
+
+    bool GetVarPosition(uint16_t index);
+    bool WriteVarPosition(uint16_t index, std::vector<int32_t> pos);
+    bool WriteByte(uint16_t index, uint8_t data);
+    bool GetByte(uint16_t index);
+
+
+
+    bool StopReadPos; // lua chon dang Position hien thi
+
+    bool StopBothPos; // ngung doc hai vi tri
+
+
 
 
 //---------------------------------------
@@ -69,13 +85,18 @@ public:
 
 //---------------------------------------
 
+    double Pulse2Joint(int32_t pulse, int i);
 //------Void-----------------------------
     void ReceiveData();
     void ReceiveDataFile();
     void run();
     void convert_hexa(char*  input, char* output);
 //---------------------------------------
-
+signals:
+    void ReadPos_cons();
+    void SigReadPulse();
+    void SigReadCartasian();
+    void SigWriteCartasian();
 
 private:
     QHostAddress _HostAddress;
@@ -87,10 +108,12 @@ private:
     struct TxDataWritePosition;
     struct TxDataWritePulse;
     struct TxDataFile;
+    struct TxDataWriteVarPosition;
 
+
+    QByteArray WritePos;
 
     bool isStop;
-    QByteArray WritePos;
 protected:
      static const QString ON_SERVO_CMD;
      static const QString OFF_SERVO_CMD;
@@ -101,8 +124,13 @@ protected:
      static const QString WRITE_POS_HEADER;
 
 
-private slots:
-     void ReadPos();
+     static const double PULSE_PER_DEGREE_S ;
+     static const double PULSE_PER_DEGREE_L ;
+     static const double PULSE_PER_DEGREE_U ;
+     static const double PULSE_PER_DEGREE_RBT ;
+
+
+
 
 
 };

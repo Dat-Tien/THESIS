@@ -35,8 +35,6 @@ DialogFile::DialogFile(QWidget *parent) :
     pre_blockNo = 0x80000000;
 //    qDebug()<<pre_blockNo+0x0B;
     QString s1  = "0x01";
-    uint32_t a = s1.toUInt(nullptr,16);
-//    qDebug()<<a;
     Check_blockNo_Send = 0x80000000;
 
       std::vector<char> s;
@@ -77,7 +75,7 @@ void DialogFile::getValueTable(std::vector<QString> s, int row)
     }
     QString B;
     for(int j = 0; j<row;j++){
-        for(int i = j*7;i<j*7+7;i++){
+        for(int i = j*6;i<j*6+6;i++){
             B += A[i]+",";
         }
     ui->plainTextEdit->appendPlainText("P0000"+ QString::number(j)+"=" +B);

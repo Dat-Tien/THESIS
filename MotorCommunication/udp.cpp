@@ -7,8 +7,8 @@
 #include <QTimer>
 #include <QDebug>
 #include <QObject>
-#include <mainwindow.h>
 #include <QString>
+#include <QTime>
 
 //-----------Create UDP Socket------------------------------------------------------
 udp::udp(QHostAddress h,quint16 p  )
@@ -23,6 +23,15 @@ udp::~udp()
     delete [] rx_buffer;
 }
 //----------------------------------------------------------------------------------
+
+
+
+void delay1(int n)
+{
+    QTime dieTime= QTime::currentTime().addMSecs(n);
+    while (QTime::currentTime() < dieTime)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+};
 
 //------------Struct--------------------------------------------------------------
 struct udp::TxData
@@ -115,7 +124,23 @@ struct udp::TxDataWritePulse
   const uint32_t station_5_position = 0;
   const uint32_t station_6_position = 0;
 };
+struct udp::TxDataWriteVarPosition
+{
+    uint32_t data_type;
+    const uint32_t figure = 0;
+    const uint32_t tool_no = 0;
+    const uint32_t user_coodirnate_no = 0;
+    const uint32_t extended_figure = 0;
+    int32_t first_axis_position;
+    int32_t second_axis_position;
+    int32_t third_axis_position;
+    int32_t fourth_axis_position;
+    int32_t fifth_axis_position;
+    int32_t sixth_axis_position;
+    const int32_t seventh_axis_position = 0;
+    const int32_t eighth_axis_position = 0;
 
+};
 
 //------------------------------------------------------------------------
 
@@ -233,6 +258,7 @@ bool udp::ConnectMotoman()
     client = new QUdpSocket;
     client->bind();
     isStop = false;
+    qDebug()<<"isStop: "<< isStop;
     return 1;
 }
 bool udp::DisconnectMotoman()
@@ -240,6 +266,7 @@ bool udp::DisconnectMotoman()
     client ->close();
     delete client;
     isStop = true;
+    qDebug()<<"isStop: "<< isStop;
     return 1;
 
 }
@@ -265,6 +292,7 @@ bool udp::OnServo()
     delete [] buffer;
 //    SendCommand(Hex2ByteArray(ON_SERVO_CMD));
 //    tx_data = ON_SERVO_CMD;
+
     return 1;
 }
 bool udp::OffServo()
@@ -284,6 +312,7 @@ bool udp::OffServo()
     memcpy(buffer+32,&data,data_length);
     SendData(buffer,total_length);
     delete [] buffer;
+
   //    SendCommand(Hex2ByteArray(OFF_SERVO_CMD));
   //    tx_data = OFF_SERVO_CMD;
       return 1;
@@ -295,45 +324,31 @@ bool udp::OffServo()
 //----------------------------------------------------------------------------------
 void udp::run()
 {
-    if(isStop == false)
-    {
-        if(INSTANCE == 0x65)
-        {
-            TxData sent_data;
-            char* buffer = new char[sizeof (sent_data)];
-            sent_data.id = RECEIVE_TYPE::GET_POSITION;
-            sent_data.command_no = 0x75;
-            sent_data.instance = 0x65;
-            sent_data.attribute = 0;
-            sent_data.service = 0x01;
-            sent_data.data_size = 0;
-          //  sent_data.data.resize(0);
-            memcpy(buffer,&sent_data,sizeof (sent_data));
-            SendData(buffer,sizeof (sent_data));
-            delete [] buffer;
-          //    SendCommand(Hex2ByteArray(GET_POS_CMD));
-          //    tx_data = GET_POS_CMD;
+    qDebug()<<"Thread da mo!!!";
+    int i = 0,a = 0;
+    while(!isStop){
 
-        }
-        if(INSTANCE == 0x01)
-        {
-            TxData sent_data;
-            char* buffer = new char[sizeof (sent_data)];
-            sent_data.id = RECEIVE_TYPE::GET_PULSE;
-            sent_data.command_no = 0x75;
-            sent_data.instance = 0x01;
-            sent_data.attribute = 0;
-            sent_data.service = 0x01;
-            sent_data.data_size = 0;
-
-            memcpy(buffer,&sent_data,sizeof (sent_data));
-            SendData(buffer,sizeof (sent_data));
-            delete [] buffer;
-//            qDebug()<<"Pulse";
-
+//        if(!StopBothPos){
+            if(StopReadPos){
+                Q_EMIT SigReadPulse();
+            }
+            delay1(20);
+            i++;
+            a++;
+            if(i == 4 ){
+                if(!StopReadPos){
+                    Q_EMIT SigReadCartasian();
+                }
+                i =0;
+            }
+            if(a == 6){
+                if(!StopReadPos){
+                    Q_EMIT SigWriteCartasian();
+                }
+                a =0;
+            }
         }
 
-    }
 }
 
 //----------------------------------------------------------------------------------
@@ -342,34 +357,64 @@ void udp::run()
 bool udp::HomePos()
 {
     TxData Header;
-    Header.command_no = 0x8A;
+    Header.command_no = 0x8B;
     Header.instance = 0x01;
     Header.attribute = 1;
     Header.service = 0x02;
     Header.id = RECEIVE_TYPE::HOME_POS;
 
-
-    TxDataWritePosition Pos;
-    Pos.speed = 1000;
-    Pos.x = 182231;
-    Pos.y = 1503;
-    Pos.z = 86230;
-    Pos.rx = 1799577;
-    Pos.ry = -9132;
-    Pos.rz = -54698;
+    TxDataWritePulse Pos;
+    Pos.r1 = 0;
+    Pos.r2 = 0;
+    Pos.r3 = 0;
+    Pos.r4 = 0;
+    Pos.r5 = 0;
+    Pos.r6 = 0;
+    Pos.speed = 10*100;
     Header.data_size = sizeof (Pos);
 
     int total_length = sizeof (Header) + sizeof (Pos);
-    char *buffer = new char[total_length];
+    char buffer[total_length];
     memcpy(buffer,&Header,sizeof (Header));
     memcpy(buffer + sizeof (Header),&Pos, total_length);
     SendData(buffer,sizeof (Header) + sizeof (Pos));
-    delete [] buffer;
-    qDebug()<<"Homing";
-   // tx_data = ByteArray2Hex(Header)+ ByteArray2Hex(Pos);
     return 1;
 }
 //----------------------------------------------------------------------------------
+
+//--------------Get Pulse/Cartasian Position----------------------------------------
+bool udp::GetCartasianPos()
+{
+    TxData sent_data;
+    char* buffer = new char[sizeof (sent_data)];
+    sent_data.id = RECEIVE_TYPE::GET_POSITION;
+    sent_data.command_no = 0x75;
+    sent_data.instance = 0x65;
+    sent_data.attribute = 0;
+    sent_data.service = 0x01;
+    sent_data.data_size = 0;
+    memcpy(buffer,&sent_data,sizeof (sent_data));
+    SendData(buffer,sizeof (sent_data));
+    delete [] buffer;
+    return 1;
+}
+bool udp::GetPulsePos()
+{
+    TxData sent_data;
+    char* buffer = new char[sizeof (sent_data)];
+    sent_data.id = RECEIVE_TYPE::GET_PULSE;
+    sent_data.command_no = 0x75;
+    sent_data.instance = 0x01;
+    sent_data.attribute = 0;
+    sent_data.service = 0x01;
+    sent_data.data_size = 0;
+    memcpy(buffer,&sent_data,sizeof (sent_data));
+    SendData(buffer,sizeof (sent_data));
+    delete [] buffer;
+    return 1;
+}
+//----------------------------------------------------------------------------------
+
 
 //---------Write Cartesian/Pulse Postion--------------------------------------------
 bool udp::WritePosCar(int32_t speed,int32_t X,int32_t Y,int32_t Z,int32_t RX,int32_t RY,int32_t RZ)
@@ -427,7 +472,81 @@ bool udp::WritePosPulse(int32_t speed,int32_t R1,int32_t R2,int32_t R3,int32_t R
     return 1;
 }
 //----------------------------------------------------------------------------------
+//--------Read and Write Var Position ----------------------------------------------
+bool udp::GetVarPosition(uint16_t index)
+{
+    TxData header;
+    header.instance = index;
+    header.command_no = 0x7F;
+    header.attribute = 0;
+    header.data_size = 0;
+    header.service = 0x0E;
+    header.id = 0x0C;
+    char buffer [sizeof (header)];
+    memcpy(buffer,&header,sizeof(header));
+    SendData(buffer,sizeof(header));
+    return 1;
+}
+bool udp::WriteVarPosition(uint16_t index, std::vector<int32_t> pos)
+{
+    TxData Header;
+    Header.command_no = 0x7F;
+    Header.instance = index;
+    Header.attribute = 0;
+    Header.service = 0x02;
+    Header.id = RECEIVE_TYPE::WRITE_VARPOS;
 
+    TxDataWriteVarPosition position;
+    position.data_type = 0x11;
+    position.first_axis_position = pos.at(0);
+    position.second_axis_position = pos.at(1);
+    position.third_axis_position =pos.at(2);
+    position.fourth_axis_position = pos.at(3);
+    position.fifth_axis_position = pos.at(4);
+    position.sixth_axis_position = pos.at(5);
+
+    Header.data_size = sizeof(position);
+
+    char buffer[sizeof(Header)+ sizeof(position)];
+    memcpy(buffer,&Header, sizeof(Header));
+    memcpy(buffer + sizeof(Header),&position,sizeof(position));
+    SendData(buffer, sizeof(buffer));
+    return 1;
+}
+
+
+bool udp::WriteByte(uint16_t index, uint8_t data)
+{
+    TxData header;
+    header.id = RECEIVE_TYPE::WRITE_BYTE;
+    header.command_no = 0x7A;
+    header.attribute = 1;
+    header.service = 0x10;
+    header.instance = index;
+    header.data_size = sizeof(data);
+
+    char buffer[sizeof(header)+ sizeof(data)];
+    memcpy(buffer,&header,sizeof(header));
+    memcpy(buffer+ sizeof(header),&data, sizeof(data));
+    SendData(buffer,sizeof(buffer));
+    return 1;
+}
+
+bool udp::GetByte(uint16_t index)
+{
+    TxData header;
+    header.id = RECEIVE_TYPE::WRITE_BYTE;
+    header.command_no = 0x7A;
+    header.attribute = 1;
+    header.service = 0x0E;
+    header.instance = index;
+    header.data_size = 0;
+    char buffer[sizeof(header)];
+    memcpy(buffer,&header,sizeof(header));
+    SendData(buffer,sizeof(buffer));
+    return 1;
+}
+//----------------------------------------------------------------------------------
 
 
 //---------Start Job----------------------------------------------------------------
@@ -645,6 +764,22 @@ void udp::convert_hexa(char* input, char* output)
 //---------------------------------------------------------------------------
 
 
+double udp::Pulse2Joint(int32_t pulse, int i)
+{
+    if(i==0)
+      {
+        return double(pulse)/PULSE_PER_DEGREE_S;
+      }
+      else if (i==1) {
+        return double(pulse)/PULSE_PER_DEGREE_L;
+      }
+      else if (i==2) {
+        return double(pulse)/PULSE_PER_DEGREE_U;
+      }
+      else {
+        return double(pulse)/PULSE_PER_DEGREE_RBT;
+      }
+}
 
 
 
@@ -659,3 +794,8 @@ const QString udp::GET_POS_PULSE =    "59 45 52 43 20 00 00 00 03 01 00 03 00 00
 const QString udp::WRITE_POS_HEADER = "59 45 52 43 20 00 68 00 03 01 00 04 00 00 00 00 39 39 39 39 39 39 39 39 8A 00 01 00 01 02 00 00 01 00 00 00 00 00 00 00 00 00 00 00";
 //const QString udp::SAVE_FILE =        "59 45 52 43 20 00 0A 00 03 02 00 0F 00 00 00 00 39 39 39 39 39 39 39 39 00 00 00 00 00 16 00 00 50 49 43 4B 41 39 2E 4A 42 49";
 //const QString udp::START_JOB = "59 45 52 43 20 00 04 00 03 01 00 09 00 00 00 00 39 39 39 39 39 39 39 39 86 00 01 00 01 10 00 00 01 00 00 00";
+
+const double udp::PULSE_PER_DEGREE_S = 34816/30;
+const double udp::PULSE_PER_DEGREE_L = 102400/90;
+const double udp::PULSE_PER_DEGREE_U = 51200/90;
+const double udp::PULSE_PER_DEGREE_RBT = 10204/30;

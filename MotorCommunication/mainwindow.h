@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "ui_mainwindow.h"
+#include "capture.h"
 #include "udp.h"
 #include "dialogfile.h"
 #include <time.h>
@@ -9,10 +11,42 @@
 #include <QThread>
 #include <QTableWidget>
 #include <vector>
+#include <QSerialPort>
+#include <QDebug>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/videoio.hpp>
+#include <librealsense2/rs.hpp>
+#include <iostream>
+#include <QHBoxLayout>
+#include <QSizeGrip>
+#include <QMouseEvent>
+#include <QRubberBand>
+
 using namespace std;
 
-namespace Ui { class MainWindow; }
+class capture;
 
+class Resize_RubberBand : public QWidget {
+public:
+    Resize_RubberBand(QWidget* parent = 0);
+
+private:
+    QRubberBand* rubberband;
+    QPoint lastPoint, newPoint;
+    bool move_rubberband;
+    QPoint rubberband_offset;
+    void resizeEvent(QResizeEvent *);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+
+};
+
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
 
 class DialogFile;
 class MainWindow : public QMainWindow
@@ -30,18 +64,28 @@ public:
     void DisplayPosition();
 
 
+    capture *videoCapture;
+
+
+
 private slots:
+
+//------- Slot thong qua Connect---------------------------
+    void ReadPosCartasian();
+    void ReadPosPulse();
     void MultiPoint();
+    void Read();
+    void TransportPosX();
+    void ReadSerial();
+    void AddYrobot();
+
+
+
+//-----------------------------------------------------------
 
     void on_btnConnected_clicked();
 
     void on_btnServo_clicked();
-
-    void Thread_Pos();
-
-    void Read();
-
-    void TransportPosX();
 
     void on_btnHome_clicked();
 
@@ -115,27 +159,93 @@ private slots:
 
     void on_btnYaw2_released();
 
-    void on_pushButton_clicked();
-
-    void on_btnSaveJob_clicked();
-
     void on_btnJobExec_clicked();
 
-    void on_pushButtonSave_clicked();
+
+// ------------ Xu ly anh----------------------------------------
+    void handleButton();
+
+    void on_displayImage_clicked();
+
+    QImage cvMatToQImage(const cv::Mat &inMat);
+    QPixmap cvMatToQPixmap(const cv::Mat &inMat);
+    cv::Mat QImageToMat(QImage image);
+
+    void on_displayQPixmap_clicked();
+
+    void on_camera_clicked();
+
+    void on_camera_off_clicked();
+
+    void on_Get_Background_clicked();
+
+    void on_Mask_clicked();
+
+    void on_chooseObject_clicked();
+
+    void on_pushButton_2_clicked();
+
+    void on_pushButton_3_clicked();
+
+    void on_pushButton11_clicked();
+
+//----------------------------------------------------------------
+
+
+
+// ---------- Test -----------------------------------------------
+
+
+
+
+
+
+
+    void Test_Continues();
+//-----------------------------------------------------------------
+
+
+
+    void on_pushButtonWriteB_clicked();
+
+    void on_pushButtonWriteB_4_clicked();
+
+    void on_pushButtonVitrivat_clicked();
+
+
+    void on_pushButtonWriteB4_clicked();
+
+    void on_pushButtonAuto_clicked();
+
+    void on_pushButtonNgat_clicked();
+
+    void on_pushButtonBat_clicked();
+
+    void on_pushButtonTracking_clicked();
+
+    void on_pushButton_clicked();
+
+    void on_ConveySpeed_currentIndexChanged(int index);
+
+    void on_pushButtonRun_clicked();
 
 private:
     Ui::MainWindow *ui;
+
+    bool Find_Mask_Ready = 1;
+    Resize_RubberBand *band;
+
     udp *socket;
-
-
-
-
+    QSerialPort *serial;
     time_t start;
     time_t stop;
-    QTimer *startPos;
+
     QTimer *Multi;
 
     QTimer *TransPosX;
+    QTimer *TimeWriteY;
+
+
 
     QTableWidget *table;
 
@@ -159,6 +269,8 @@ private:
 
 
 
+
+
     void setValueAt( int ix, int jx, const QString &value);
     QString getValueAt(int ix, int jx);
 
@@ -168,6 +280,20 @@ private:
     {
         PosX, PosY, PosZ, PosRx, PosRy, PosRz, Speeds
     };
+
+
+    double yrobot =0, zrobot = 0, xrobot =0;
+
+    //test
+    QTimer *testWrite;
+
+    uint coutY = 0;
+    double t1,t2; //
+
+
+
+
+
 
 
 
