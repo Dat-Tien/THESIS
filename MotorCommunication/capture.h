@@ -52,6 +52,13 @@ public:
 
 signals:
     void newPixmapCaptured_Color();
+    void rectangle();
+    void circle();
+    void defect_shape();
+    void noobject();
+    void hexagon();
+    void pass();
+    void fail();
 
 private:
     QPixmap Pixmap_Color;

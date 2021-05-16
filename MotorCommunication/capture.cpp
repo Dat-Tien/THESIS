@@ -82,7 +82,7 @@ void labelBlobs(const cv::Mat gray, std::vector < std::vector<cv::Point> > &blob
                     blob.push_back(cv::Point(j,i));
                 }
             }
-            if ((blob.size() > 5000)&&(blob.size() <8000))
+            if ((blob.size() > 3000)&&(blob.size() <15000))
                 blobs.push_back(blob);
 
             label_count++;
@@ -190,6 +190,7 @@ void capture::findContour(cv::Mat frame, std::vector<std::vector<cv::Point>> blo
     cv::Mat boxPoints; //output array of cv::boxPoints
     cv::Mat mean;
     bool findindex_ready =0;
+    std::vector<cv::Point> approx;
 
     if (!blobs.empty())
     {
@@ -226,7 +227,28 @@ void capture::findContour(cv::Mat frame, std::vector<std::vector<cv::Point>> blo
     //cv::drawContours( draw_box, contours, largest_contour_index, cv::Scalar(0, 0, 255), 2 );
     if(findindex_ready==1)
     {
-        //cout<<"hello"<<endl;
+        cv::approxPolyDP(contours[largest_contour_index], approx, cv::arcLength(contours[largest_contour_index], true)*0.02, true);
+        cv::Point2f cen;
+        float radius;
+        cv::minEnclosingCircle(contours[largest_contour_index],cen,radius);
+        qDebug()<<radius;
+
+        if(approx.size()==4)
+        {
+            Q_EMIT rectangle();
+        }
+        else if(approx.size()==6)
+        {
+            Q_EMIT hexagon();
+        }
+        else if(approx.size()>6 && radius<45)
+        {
+            Q_EMIT circle();
+        }
+            else
+            {
+                Q_EMIT defect_shape();
+            }
         minRect =cv::minAreaRect(contours[largest_contour_index]);
         cv::boxPoints(minRect,boxPoints); //boxPts: bottom-left,top-left, top-right, bottom-right
         cv::Point2f rect_points[4];
@@ -283,7 +305,14 @@ void capture::findContour(cv::Mat frame, std::vector<std::vector<cv::Point>> blo
         float x_cam,y_cam,z_cam;
         float dis = FindDistance(depthframe,center, x_cam,y_cam,z_cam );
         transfer(x_cam*1000,y_cam*1000,z_cam*1000,x_robot,y_robot,z_robot);
-
+        if(z_robot <-42)
+        {
+            Q_EMIT pass();
+        }
+        else
+        {
+            Q_EMIT fail();
+        }
 
         char text1[200], text2[200], text3[200];
         sprintf(text1,"x:%.8f y:%.8f z:%.8f",x_cam*1000, y_cam*1000, z_cam*1000) ;
@@ -362,6 +391,10 @@ void capture::run()
 
             labelBlobs(bgSubtraction,blobs);
 
+            if(blobs.size()==0)
+            {
+                Q_EMIT noobject();
+            }
 
             if(findcontour_ready == 1)
             {

@@ -165,6 +165,14 @@ private slots:
 // ------------ Xu ly anh----------------------------------------
     void handleButton();
 
+    void detect_rectangle();
+    void detect_circle();
+    void detect_defectshape();
+    void detect_noobject();
+    void detect_hexagon();
+    void pass_height();
+    void fail_height();
+
     void on_displayImage_clicked();
 
     QImage cvMatToQImage(const cv::Mat &inMat);
@@ -290,10 +298,7 @@ private:
     uint coutY = 0;
     double t1,t2; //
 
-
-
-
-
+    uint16_t shape=0;
 
 
 

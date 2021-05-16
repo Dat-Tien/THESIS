@@ -44,6 +44,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     videoCapture = new capture(this);
     QObject::connect(videoCapture,SIGNAL(newPixmapCaptured_Color()), this, SLOT (handleButton()));
+    QObject::connect(videoCapture,SIGNAL(rectangle()), this, SLOT (detect_rectangle()));
+    QObject::connect(videoCapture,SIGNAL(circle()), this, SLOT (detect_circle()));
+    QObject::connect(videoCapture,SIGNAL(defect()), this, SLOT (detect_defectshape()));
+    QObject::connect(videoCapture,SIGNAL(noobject()), this, SLOT (detect_noobject()));
+    QObject::connect(videoCapture,SIGNAL(hexagon()), this, SLOT (detect_hexagon()));
+    QObject::connect(videoCapture,SIGNAL(pass()), this, SLOT (pass_height()));
+    QObject::connect(videoCapture,SIGNAL(fail()), this, SLOT (fail_height()));
 
     videoCapture->StreamOption=0;
 
@@ -51,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(testWrite,SIGNAL(timeout()),this,SLOT(Test_Continues()));
 
     serial = new QSerialPort;
-    serial->setPortName("com4");
+    serial->setPortName("com3");
     serial->setBaudRate(QSerialPort::Baud115200);
     serial->setDataBits(QSerialPort::Data8);
     serial->setParity(QSerialPort::NoParity);
@@ -75,6 +82,46 @@ MainWindow::~MainWindow()
 void MainWindow::handleButton()
 {
     ui->cameraFrame->setPixmap(videoCapture->pixmap_Color().scaled(640,480));
+}
+
+void MainWindow::detect_rectangle()
+{
+    ui->label_shape->setText("Rectangle");
+    shape = 3;
+}
+
+void MainWindow::detect_circle()
+{
+    ui->label_shape->setText("Circle");
+    shape = 6;
+}
+void MainWindow::detect_hexagon()
+{
+    ui->label_shape->setText("Hexagon");
+    shape = 7;
+}
+
+void MainWindow::detect_defectshape()
+{
+    ui->label_shape->setText("Defect");
+}
+
+void MainWindow::detect_noobject()
+{
+    ui->label_shape->setText("No Object");
+    ui->label_height->setText("No Object");
+}
+
+
+
+void MainWindow::pass_height()
+{
+    ui->label_height->setText("Pass");
+}
+
+void MainWindow::fail_height()
+{
+    ui->label_height->setText("Fail");
 }
 
 void MainWindow::ReadSerial()
@@ -1290,9 +1337,7 @@ cv::Mat MainWindow::QImageToMat(QImage image)
 
 void MainWindow::on_displayQPixmap_clicked()
 {
-    Mat img_Mat = imread("E:/dog.jpg");
-    QPixmap img_QPixmap = cvMatToQPixmap(img_Mat);
-    ui->cameraFrame->setPixmap(img_QPixmap.scaled(640,480));
+    socket->WriteByte(6,1);
 }
 
 void MainWindow::on_camera_clicked()
@@ -1424,14 +1469,25 @@ void MainWindow::Test_Continues()
         pos.push_back(str[5]);
        socket->WriteVarPosition(index,pos);
 
-       qDebug()<<"y = "<<yrobot;
+//       qDebug()<<"y = "<<yrobot;
        double distance = sqrt(pow(xrobot-str[0],2)+pow(yrobot - str[1],2) + pow(zrobot - str[2],2));
-       qDebug()<<distance;
-       if( distance <= 8*1000) {
-            socket->WriteByte(3,1);
-       }
+//       qDebug()<<distance;
+       //qDebug()<<shape;
+       ui->textEdiddis->setText(QString::number(shape));
 
+       if( distance <= 12*1000) {
+//           if(shape==0)
+//           {
+//               socket->WriteByte(6,1);
+//           }
+//           else if (shape == 1)
+//           {
+//                socket->WriteByte(3,1);
+//           }
+           socket->WriteByte(shape,1);
+           }
 }
+
 void MainWindow::on_pushButtonWriteB_clicked()
 {
     std::vector<int32_t> pos;
@@ -1541,18 +1597,19 @@ void MainWindow::on_ConveySpeed_currentIndexChanged(int index)
 {
     switch(index){
     case 0:
-        t1 = 20;
-        t2 = 0.09;
+        t1 = 1.5185;
+        t2 = 0.04;
         break;
     case 1:
+        t1 = 1.5756;
+        t2 = 0.04;
         break;
     case 2:
-        t1 = 1.7;
+        t1 = 1.6387;
         t2 = 0.03;
         break;
     case 3:
-        t1 = 1.7;
-//                1.83455;
+        t1 = 1.704;
         t2 = 0.03;
         qDebug()<<t1<<" "<<t2;
         break;

@@ -1707,8 +1707,8 @@ selection-backgound-color: #282828;
      <widget class="QPushButton" name="pushButton11">
       <property name="geometry">
        <rect>
-        <x>760</x>
-        <y>30</y>
+        <x>840</x>
+        <y>20</y>
         <width>75</width>
         <height>23</height>
        </rect>
@@ -1741,6 +1741,58 @@ selection-backgound-color: #282828;
       </property>
       <property name="text">
        <string>blob</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_shape">
+      <property name="geometry">
+       <rect>
+        <x>710</x>
+        <y>10</y>
+        <width>71</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>TextLabel</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_5">
+      <property name="geometry">
+       <rect>
+        <x>660</x>
+        <y>20</y>
+        <width>61</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Shape:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_6">
+      <property name="geometry">
+       <rect>
+        <x>660</x>
+        <y>70</y>
+        <width>51</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Height:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_height">
+      <property name="geometry">
+       <rect>
+        <x>710</x>
+        <y>60</y>
+        <width>71</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>TextLabel</string>
       </property>
      </widget>
     </widget>
@@ -2017,6 +2069,16 @@ p, li { white-space: pre-wrap; }
        <string>60</string>
       </property>
      </item>
+    </widget>
+    <widget class="QTextEdit" name="textEdiddis">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>310</y>
+       <width>104</width>
+       <height>31</height>
+      </rect>
+     </property>
     </widget>
    </widget>
   </widget>
