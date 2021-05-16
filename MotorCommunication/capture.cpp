@@ -218,20 +218,17 @@ void capture::findContour(cv::Mat frame, std::vector<std::vector<cv::Point>> blo
             {
               largest_area = area;
               largest_contour_index = i;
-              //cout<<largest_contour_index<<endl;
               findindex_ready = 1;
             }
         }
     draw_box = frame;
 
-    //cv::drawContours( draw_box, contours, largest_contour_index, cv::Scalar(0, 0, 255), 2 );
     if(findindex_ready==1)
     {
         cv::approxPolyDP(contours[largest_contour_index], approx, cv::arcLength(contours[largest_contour_index], true)*0.02, true);
         cv::Point2f cen;
         float radius;
         cv::minEnclosingCircle(contours[largest_contour_index],cen,radius);
-        qDebug()<<radius;
 
         if(approx.size()==4)
         {
@@ -277,8 +274,6 @@ void capture::findContour(cv::Mat frame, std::vector<std::vector<cv::Point>> blo
 
         if (A != B) theta = std::atan(-(A.y - B.y)/(A.x - B.x))*180/3.14;
         else theta =0;
-
-        //cout<<theta<<endl;
 
         //between the top-left and top-right coordinates, followed by
         //the midpoint between bottom-left and bottom-right coordinates

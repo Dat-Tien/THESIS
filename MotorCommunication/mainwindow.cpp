@@ -98,7 +98,7 @@ void MainWindow::detect_circle()
 void MainWindow::detect_hexagon()
 {
     ui->label_shape->setText("Hexagon");
-    shape = 7;
+    //shape = 7;
 }
 
 void MainWindow::detect_defectshape()
