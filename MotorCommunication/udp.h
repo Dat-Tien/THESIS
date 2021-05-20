@@ -56,6 +56,7 @@ public:
     bool StopBothPos; // ngung doc hai vi tri
 
 
+    bool PLC(QHostAddress host, uint port,uint16_t addr,uint16_t no_reg,std::vector<uint16_t> data);
 
 
 //---------------------------------------
@@ -109,6 +110,7 @@ private:
     struct TxDataWritePulse;
     struct TxDataFile;
     struct TxDataWriteVarPosition;
+    struct TxPLC;
 
 
     QByteArray WritePos;

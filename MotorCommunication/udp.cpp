@@ -781,7 +781,38 @@ double udp::Pulse2Joint(int32_t pulse, int i)
       }
 }
 
+//-----------PLC--------------
+struct udp::TxPLC
+{
+    const uint8_t command = 0x11;
+    const uint8_t fix1 = 0;
+    const uint16_t channel = 0;
+    const uint16_t Reserved1 = 0;
+    uint16_t Total_number;
+    const uint32_t Reserved2 = 0;
+    uint16_t MFC_length;
+    const uint8_t MFC =0x20;
+    const uint8_t SFC = 0x0B;
+    const uint16_t cpu_number = 0x10;
+    uint16_t reference;
+    uint16_t register_number;
+    uint16_t data[];
+};
 
+bool udp::PLC(QHostAddress host, uint port,uint16_t addr,uint16_t no_reg,std::vector<uint16_t> data)
+{
+    TxPLC txdata;
+    txdata.MFC_length = 8 + 2*data.size();
+    txdata.reference = addr;
+    txdata.register_number = no_reg;
+    txdata.Total_number = 14 + txdata.MFC_length;
+    memcpy(txdata.data,data.data(),data.size());
+    char buffer [txdata.Total_number];
+    memcpy(buffer,&txdata,sizeof(txdata));
+    client->writeDatagram(buffer,sizeof (txdata),host,port);
+    return 1;
+
+}
 
 
 

@@ -237,6 +237,18 @@ private slots:
 
     void on_pushButtonRun_clicked();
 
+
+
+    void on_pushButton_PLC_Conveyor_clicked();
+
+    void on_pushButtonServoONOFF_clicked();
+
+
+
+    void on_pushButtonServoHOMING_clicked();
+
+    void on_pushButtonServoSTARTSTOP_clicked();
+
 private:
     Ui::MainWindow *ui;
 
@@ -299,6 +311,8 @@ private:
     double t1,t2; //
 
     uint16_t shape=0;
+
+    void Waiting();
 
 
 

@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(testWrite,SIGNAL(timeout()),this,SLOT(Test_Continues()));
 
     serial = new QSerialPort;
-    serial->setPortName("com3");
+    serial->setPortName("com4");
     serial->setBaudRate(QSerialPort::Baud115200);
     serial->setDataBits(QSerialPort::Data8);
     serial->setParity(QSerialPort::NoParity);
@@ -98,7 +98,7 @@ void MainWindow::detect_circle()
 void MainWindow::detect_hexagon()
 {
     ui->label_shape->setText("Hexagon");
-    //shape = 7;
+    shape = 7;
 }
 
 void MainWindow::detect_defectshape()
@@ -134,7 +134,7 @@ void delay(int n)
     QTime dieTime= QTime::currentTime().addMSecs(n);
     while (QTime::currentTime() < dieTime)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-}
+};\
 
 //--------------Thread Position-------------------------------
 void MainWindow::ReadPosCartasian(){
@@ -387,7 +387,7 @@ void MainWindow::on_chkcarPulPos_clicked()
         else
         {
             socket->StopReadPos = false;
-            qDebug()<<"StopReadPos: "<<socket->StopReadPos;
+            //qDebug()<<"StopReadPos: "<<socket->StopReadPos;
             ui->btnX1->setText("X-");
             ui->btnX2->setText("X+");
             ui->btnY1->setText("Y-");
@@ -524,11 +524,37 @@ void MainWindow::on_btnDelete_clicked()
 }
 //------------------------------------------------------------------
 //--------Play back-------------------------------------------------
+void MainWindow::Waiting(){
+    while(1){
+        if(table->item(count,PosX)->text().toUInt()- str[0] >1 ||table->item(count,PosY)->text().toUInt()- str[1] >1 ||table->item(count,PosZ)->text().toUInt()- str[2] >1 ||table->item(count,PosRx)->text().toUInt()- str[3] >1 || table->item(count,PosRy)->text().toUInt()- str[4] >1 || table->item(count,PosRz)->text().toUInt()- str[5] >1)
+           {
+           delay(400);
+        }
+        else break;
+    }
+}
 void MainWindow::on_btnPlayback_clicked()
 {
 
-    Multi->start();
-
+    //Multi->start();
+    int row = table->rowCount();
+    while(count != row){
+        uint32_t speed = 10*100;
+               uint32_t X = table->item(count,PosX)->text().toUInt();
+               uint32_t Y = table->item(count,PosY)->text().toUInt();
+               uint32_t Z = table->item(count,PosZ)->text().toUInt();
+               uint32_t Rx = table->item(count,PosRx)->text().toUInt();
+               uint32_t Ry = table->item(count,PosRy)->text().toUInt();
+               uint32_t Rz = table->item(count,PosRz)->text().toUInt();
+               socket->WritePosPulse(speed,X,Y,Z,Rx,Ry,Rz);
+               qDebug()<<count;
+               Waiting();
+               count+=1;
+                if(count == row){
+                    count =0;
+                    break;
+                }
+    }
 }
 void MainWindow::MultiPoint()
 {
@@ -891,13 +917,13 @@ void MainWindow::subtractX()
     else
     {
         int32_t speed = ui->progressBarSpeed->value()*100;
-        int32_t Y = ui->tbxY->toPlainText().toDouble()*1000;
-        int32_t Z = ui->tbxZ->toPlainText().toDouble()*1000;
-        int32_t RX = ui->tbxRoll->toPlainText().toDouble()*10000;
-        int32_t RY = ui->tbxPitch->toPlainText().toDouble()*10000;
-        int32_t RZ = ui->tbxYaw->toPlainText().toDouble()*10000;
+        int32_t Y = str[1];
+        int32_t Z = str[2];
+        int32_t RX = str[3];
+        int32_t RY = str[4];
+        int32_t RZ = str[5];
         int32_t X1 = 5*speed/100;
-        int32_t X = ui->tbxX->toPlainText().toDouble()*1000 - X1*1000;
+        int32_t X = str[0] - X1*1000;
         socket->WritePosCar(speed,X,Y,Z,RX,RY,RZ);
     }
 }
@@ -918,13 +944,13 @@ void MainWindow::addX()
     else
     {
         int32_t speed = ui->progressBarSpeed->value()*100;
-        int32_t Y = ui->tbxY->toPlainText().toDouble()*1000;
-        int32_t Z = ui->tbxZ->toPlainText().toDouble()*1000;
-        int32_t RX = ui->tbxRoll->toPlainText().toDouble()*10000;
-        int32_t RY = ui->tbxPitch->toPlainText().toDouble()*10000;
-        int32_t RZ = ui->tbxYaw->toPlainText().toDouble()*10000;
+        int32_t Y = str[1];
+        int32_t Z = str[2];
+        int32_t RX = str[3];
+        int32_t RY = str[4];
+        int32_t RZ = str[5];
         int32_t X1 = 5*speed/100;
-        int32_t X = ui->tbxX->toPlainText().toDouble()*1000 + X1*1000;
+        int32_t X = str[0] + X1*1000;
         socket->WritePosCar(speed,X,Y,Z,RX,RY,RZ);
     }
 }
@@ -944,14 +970,14 @@ void MainWindow::subtractY()
     }
     else
     {
-       int32_t speed = ui->progressBarSpeed->value()*100;
-        int32_t X = ui->tbxX->toPlainText().toDouble()*1000;
-        int32_t Z = ui->tbxZ->toPlainText().toDouble()*1000;
-        int32_t RX = ui->tbxRoll->toPlainText().toDouble()*10000;
-        int32_t RY = ui->tbxPitch->toPlainText().toDouble()*10000;
-        int32_t RZ = ui->tbxYaw->toPlainText().toDouble()*10000;
+        int32_t speed = ui->progressBarSpeed->value()*100;
+        int32_t X = str[0];
+        int32_t Z = str[2];
+        int32_t RX = str[3];
+        int32_t RY = str[4];
+        int32_t RZ = str[5];
         int32_t Y1 = 5*speed/100;
-        int32_t Y = ui->tbxY->toPlainText().toDouble()*1000 - Y1*1000;
+        int32_t Y = str[1] - Y1*1000;
         socket->WritePosCar(speed,X,Y,Z,RX,RY,RZ);
     }
 }
@@ -972,13 +998,13 @@ void MainWindow::addY()
     else
     {
         int32_t speed = ui->progressBarSpeed->value()*100;
-        int32_t X = ui->tbxX->toPlainText().toDouble()*1000;
-        int32_t Z = ui->tbxZ->toPlainText().toDouble()*1000;
-        int32_t RX = ui->tbxRoll->toPlainText().toDouble()*10000;
-        int32_t RY = ui->tbxPitch->toPlainText().toDouble()*10000;
-        int32_t RZ = ui->tbxYaw->toPlainText().toDouble()*10000;
+        int32_t X = str[0];
+        int32_t Z = str[2];
+        int32_t RX = str[3];
+        int32_t RY = str[4];
+        int32_t RZ = str[5];
         int32_t Y1 = 5*speed/100;
-        int32_t Y = ui->tbxY->toPlainText().toDouble()*1000 + Y1*1000;
+        int32_t Y = str[1] + Y1*1000;
         socket->WritePosCar(speed,X,Y,Z,RX,RY,RZ);
     }
 }
@@ -999,13 +1025,13 @@ void MainWindow::subtractZ()
     else
     {
         int32_t speed = ui->progressBarSpeed->value()*100;
-        int32_t X = ui->tbxX->toPlainText().toDouble()*1000;
-        int32_t Y = ui->tbxY->toPlainText().toDouble()*1000;
-        int32_t RX = ui->tbxRoll->toPlainText().toDouble()*10000;
-        int32_t RY = ui->tbxPitch->toPlainText().toDouble()*10000;
-        int32_t RZ = ui->tbxYaw->toPlainText().toDouble()*10000;
+        int32_t X = str[0];
+        int32_t Y = str[1];
+        int32_t RX = str[3];
+        int32_t RY = str[4];
+        int32_t RZ = str[5];
         int32_t Z1 = 5*speed/100;
-        int32_t Z = ui->tbxZ->toPlainText().toDouble()*1000 - Z1*1000;
+        int32_t Z = str[2] - Z1*1000;
         socket->WritePosCar(speed,X,Y,Z,RX,RY,RZ);
     }
 }
@@ -1026,13 +1052,13 @@ void MainWindow::addZ()
     else
     {
         int32_t speed = ui->progressBarSpeed->value()*100;
-        int32_t X = ui->tbxX->toPlainText().toDouble()*1000;
-        int32_t Y = ui->tbxY->toPlainText().toDouble()*1000;
-        int32_t RX = ui->tbxRoll->toPlainText().toDouble()*10000;
-        int32_t RY = ui->tbxPitch->toPlainText().toDouble()*10000;
-        int32_t RZ = ui->tbxYaw->toPlainText().toDouble()*10000;
+        int32_t X = str[0];
+        int32_t Y = str[1];
+        int32_t RX = str[3];
+        int32_t RY = str[4];
+        int32_t RZ = str[5];
         int32_t Z1 = 5*speed/100;
-        int32_t Z = ui->tbxZ->toPlainText().toDouble()*1000 + Z1*1000;
+        int32_t Z = str[2] + Z1*1000;
         socket->WritePosCar(speed,X,Y,Z,RX,RY,RZ);
     }
 }
@@ -1053,13 +1079,13 @@ void MainWindow::subtractRx()
     else
     {
         int32_t speed = ui->progressBarSpeed->value()*100;
-        int32_t X = ui->tbxX->toPlainText().toDouble()*1000;
-        int32_t Y = ui->tbxY->toPlainText().toDouble()*1000;
-        int32_t Z = ui->tbxZ->toPlainText().toDouble()*1000;
-        int32_t RY = ui->tbxPitch->toPlainText().toDouble()*10000;
-        int32_t RZ = ui->tbxYaw->toPlainText().toDouble()*10000;
+        int32_t X = str[0];
+        int32_t Y = str[1];
+        int32_t Z = str[2];
+        int32_t RY = str[4];
+        int32_t RZ = str[5];
         int32_t RX1 = 0.2*speed/100;
-        int32_t RX = ui->tbxRoll->toPlainText().toDouble()*10000 - RX1*10000;
+        int32_t RX = str[3] - RX1*10000;
         socket->WritePosCar(speed,X,Y,Z,RX,RY,RZ);
     }
 }
@@ -1080,13 +1106,13 @@ void MainWindow::addRx()
     else
     {
         int32_t speed = ui->progressBarSpeed->value()*100;
-        int32_t X = ui->tbxX->toPlainText().toDouble()*1000;
-        int32_t Y = ui->tbxY->toPlainText().toDouble()*1000;
-        int32_t Z = ui->tbxZ->toPlainText().toDouble()*1000;
-        int32_t RY = ui->tbxPitch->toPlainText().toDouble()*10000;
-        int32_t RZ = ui->tbxYaw->toPlainText().toDouble()*10000;
+        int32_t X = str[0];
+        int32_t Y = str[1];
+        int32_t Z = str[2];
+        int32_t RY = str[4];
+        int32_t RZ = str[5];
         int32_t RX1 = 0.2*speed/100;
-        int32_t RX = ui->tbxRoll->toPlainText().toDouble()*10000 + RX1*10000;
+        int32_t RX = str[3] + RX1*10000;
         socket->WritePosCar(speed,X,Y,Z,RX,RY,RZ);
     }
 }
@@ -1107,13 +1133,13 @@ void MainWindow::subtractRy()
     else
     {
         int32_t speed = ui->progressBarSpeed->value()*100;
-        int32_t X = ui->tbxX->toPlainText().toDouble()*1000;
-        int32_t Y = ui->tbxY->toPlainText().toDouble()*1000;
-        int32_t Z = ui->tbxZ->toPlainText().toDouble()*1000;
-        int32_t RX = ui->tbxRoll->toPlainText().toDouble()*10000;
-        int32_t RZ = ui->tbxYaw->toPlainText().toDouble()*10000;
+        int32_t X = str[0];
+        int32_t Y = str[1];
+        int32_t Z = str[2];
+        int32_t RX = str[3];
+        int32_t RZ = str[5];
         int32_t RY1 = 0.2*speed/100;
-        int32_t RY = ui->tbxPitch->toPlainText().toDouble()*10000 - RY1*10000;
+        int32_t RY = str[4] - RY1*10000;
         socket->WritePosCar(speed,X,Y,Z,RX,RY,RZ);
     }
 }
@@ -1134,13 +1160,13 @@ void MainWindow::addRy()
     else
     {
         int32_t speed = ui->progressBarSpeed->value()*100;
-        int32_t X = ui->tbxX->toPlainText().toDouble()*1000;
-        int32_t Y = ui->tbxY->toPlainText().toDouble()*1000;
-        int32_t Z = ui->tbxZ->toPlainText().toDouble()*1000;
-        int32_t RX = ui->tbxRoll->toPlainText().toDouble()*10000;
-        int32_t RZ = ui->tbxYaw->toPlainText().toDouble()*10000;
+        int32_t X = str[0];
+        int32_t Y = str[1];
+        int32_t Z = str[2];
+        int32_t RX = str[3];
+        int32_t RZ = str[5];
         int32_t RY1 = 0.2*speed/100;
-        int32_t RY = ui->tbxPitch->toPlainText().toDouble()*10000 + RY1*10000;
+        int32_t RY = str[4] + RY1*10000;
         socket->WritePosCar(speed,X,Y,Z,RX,RY,RZ);
     }
 }
@@ -1161,13 +1187,13 @@ void MainWindow::subtractRz()
     else
     {
         int32_t speed = ui->progressBarSpeed->value()*100;
-        int32_t X = ui->tbxX->toPlainText().toDouble()*1000;
-        int32_t Y = ui->tbxY->toPlainText().toDouble()*1000;
-        int32_t Z = ui->tbxZ->toPlainText().toDouble()*1000;
-        int32_t RX = ui->tbxRoll->toPlainText().toDouble()*10000;
-        int32_t RY = ui->tbxPitch->toPlainText().toDouble()*10000;
+        int32_t X = str[0];
+        int32_t Y = str[1];
+        int32_t Z = str[2];
+        int32_t RX = str[3];
+        int32_t RY = str[4];
         int32_t RZ1 = 0.2*speed/100;
-        int32_t RZ = ui->tbxYaw->toPlainText().toDouble()*10000 - RZ1*10000;
+        int32_t RZ = str[5] - RZ1*10000;
         socket->WritePosCar(speed,X,Y,Z,RX,RY,RZ);
     }
 }
@@ -1188,13 +1214,13 @@ void MainWindow::addRz()
     else
     {
         int32_t speed = ui->progressBarSpeed->value()*100;
-        int32_t X = ui->tbxX->toPlainText().toDouble()*1000;
-        int32_t Y = ui->tbxY->toPlainText().toDouble()*1000;
-        int32_t Z = ui->tbxZ->toPlainText().toDouble()*1000;
-        int32_t RX = ui->tbxRoll->toPlainText().toDouble()*10000;
-        int32_t RY = ui->tbxPitch->toPlainText().toDouble()*10000;
+        int32_t X = str[0];
+        int32_t Y = str[1];
+        int32_t Z = str[2];
+        int32_t RX = str[3];
+        int32_t RY = str[4];
         int32_t RZ1 = 0.2*speed/100;
-        int32_t RZ = ui->tbxYaw->toPlainText().toDouble()*10000 + RZ1*10000;
+        int32_t RZ = str[5] + RZ1*10000;
         socket->WritePosCar(speed,X,Y,Z,RX,RY,RZ);
     }
 }
@@ -1458,7 +1484,7 @@ void MainWindow::Test_Continues()
 {
 
     double velog = ui->SerialPort->text().toDouble();
-    yrobot = yrobot + velog*t2*1000;
+    //yrobot = yrobot + velog*t2*1000;
     int32_t index = 3;
      std::vector<int32_t> pos;
         pos.push_back(xrobot);
@@ -1470,20 +1496,13 @@ void MainWindow::Test_Continues()
        socket->WriteVarPosition(index,pos);
 
 //       qDebug()<<"y = "<<yrobot;
-       double distance = sqrt(pow(xrobot-str[0],2)+pow(yrobot - str[1],2) + pow(zrobot - str[2],2));
-//       qDebug()<<distance;
+      double distance = sqrt(pow(xrobot-str[0],2)+pow(yrobot - str[1],2) + pow(zrobot - str[2],2));
+      //qDebug()<<distance;
        //qDebug()<<shape;
+
        ui->textEdiddis->setText(QString::number(shape));
 
-       if( distance <= 12*1000) {
-//           if(shape==0)
-//           {
-//               socket->WriteByte(6,1);
-//           }
-//           else if (shape == 1)
-//           {
-//                socket->WriteByte(3,1);
-//           }
+       if( distance <=5*1000) {
            socket->WriteByte(shape,1);
            }
 }
@@ -1533,13 +1552,12 @@ void MainWindow::on_pushButtonAuto_clicked()
    while(1){
        double velog = ui->SerialPort->text().toDouble();
        if(videoCapture->blobs.size() == 1){
-           if(videoCapture->y_robot > -220 && videoCapture->y_robot<-190 && videoCapture->z_robot < -42){
-                TimeWriteY->start(500);
+           if(videoCapture->y_robot > -220 && videoCapture->y_robot<-190){
                xrobot = videoCapture->x_robot*1000;
                yrobot = videoCapture->y_robot*1000 + velog*t1*1000;
                zrobot = videoCapture->z_robot*1000;
                std::vector<int32_t> pos;
-               pos.push_back( videoCapture->x_robot*1000);
+               pos.push_back(videoCapture->x_robot*1000);
                pos.push_back(videoCapture->y_robot*1000 + velog*t1*1000);
                pos.push_back(videoCapture->z_robot*1000 );
                pos.push_back(1800000);
@@ -1547,10 +1565,9 @@ void MainWindow::on_pushButtonAuto_clicked()
                pos.push_back(videoCapture->theta);
                uint16_t index = 4;             
                socket->WriteVarPosition(index,pos);
-               //delay(1000);
                uint16_t B02 = 2;
                socket->WriteByte(B02,1);
-               delay(1000);
+               delay(t1*1000);
                uint16_t B04 = 4;
                socket->WriteByte(B04,1);
            }
@@ -1582,8 +1599,8 @@ void MainWindow::on_pushButtonTracking_clicked()
 void MainWindow::on_pushButton_clicked()
 {
    while(1){
-       qDebug()<<videoCapture->blobs.size();
-       delay(1000);
+
+       delay(100);
    }
 
 }
@@ -1624,4 +1641,77 @@ void MainWindow::on_ConveySpeed_currentIndexChanged(int index)
 void MainWindow::on_pushButtonRun_clicked()
 {
 
+}
+
+
+
+void MainWindow::on_pushButton_PLC_Conveyor_clicked()
+{
+    if(ui->pushButton_PLC_Conveyor->text()=="ON"){
+        ui->pushButton_PLC_Conveyor->setText("OFF");
+        std::vector<uint16_t> data;
+        data.push_back(1);
+        ui->label_Conveyor->setText("START");
+        socket->PLC(QHostAddress("192.168.1.1"),10002,3,1,data);
+        data.at(0) = 0;
+        socket->PLC(QHostAddress("192.168.1.1"),10002,3,1,data);
+    }
+    else if(ui->pushButton_PLC_Conveyor->text()=="OFF"){
+        ui->pushButton_PLC_Conveyor->setText("ON");
+        std::vector<uint16_t> data;
+        data.push_back(1);
+        ui->label_Conveyor->setText("STOP");
+        socket->PLC(QHostAddress("192.168.1.1"),10002,5,1,data);
+        data.at(0)= 0;
+        socket->PLC(QHostAddress("192.168.1.1"),10002,5,1,data);
+    }
+}
+
+void MainWindow::on_pushButtonServoONOFF_clicked()
+{
+    if(ui->pushButtonServoONOFF->text()=="ON"){
+        ui->pushButtonServoONOFF->setText("OFF");
+        std::vector<uint16_t> data;
+        data.push_back(1);
+        ui->label_Conveyor->setText("START");
+        socket->PLC(QHostAddress("192.168.1.1"),10002,2,1,data);
+        data.at(0) = 0;
+        socket->PLC(QHostAddress("192.168.1.1"),10002,4,1,data);
+    }
+    else if(ui->pushButtonServoONOFF->text()=="OFF"){
+        ui->pushButtonServoONOFF->setText("ON");
+        std::vector<uint16_t> data;
+        data.push_back(1);
+        socket->PLC(QHostAddress("192.168.1.1"),10002,4,1,data);
+        data.at(0)= 0;
+        socket->PLC(QHostAddress("192.168.1.1"),10002,2,1,data);
+    }
+}
+
+
+void MainWindow::on_pushButtonServoHOMING_clicked()
+{
+    std::vector<uint16_t> data;
+    data.push_back(1);
+    socket->PLC(QHostAddress("192.168.1.1"),10002,6,1,data);
+}
+
+void MainWindow::on_pushButtonServoSTARTSTOP_clicked()
+{
+    if(ui->pushButtonServoSTARTSTOP->text() == "START"){
+        ui->pushButtonServoSTARTSTOP->setText("STOP");
+        std::vector<uint16_t> data;
+        data.push_back(1);
+        socket->PLC(QHostAddress("192.168.1.1"),10002,7,1,data);
+        data.at(0)= 0;
+        socket->PLC(QHostAddress("192.168.1.1"),10002,8,1,data);
+    }
+    else if(ui->pushButtonServoSTARTSTOP->text() == "STOP"){
+        ui->pushButtonServoSTARTSTOP->setText("START");
+        std::vector<uint16_t> data;
+        data.push_back(1);
+        socket->PLC(QHostAddress("192.168.1.1"),10002,8,1,data);
+        data.at(0)= 0;
+        socket->PLC(QHostAddress("192.168.1.1"),10002,7,1,data);
+    }
 }

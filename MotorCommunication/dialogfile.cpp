@@ -49,6 +49,12 @@ DialogFile::~DialogFile()
     socket->DisconnectMotoman();
 }
 
+void delay2(int n)
+{
+    QTime dieTime= QTime::currentTime().addMSecs(n);
+    while (QTime::currentTime() < dieTime)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+}
 
 void DialogFile::realTimeDate()
 {
@@ -171,6 +177,7 @@ void DialogFile::ReadFile()
         CheckBlockNoReceive();
         break;
     case 95:
+        delay2(3000);
         CheckBlockNoSend();
         break;
     }
@@ -281,10 +288,12 @@ void DialogFile::Transmitted_File(uint32_t blockNo){
             }
 
         }
-         qDebug()<<"chuoi truyen vao la: "<<arr;
+        qDebug()<<"chuoi truyen vao la: "<<arr;
         qDebug()<<"block ke tiep: "<<blockNo;
         qDebug()<<"data part size "<<i;
+        qDebug()<<"chuoi truyen di: ";
         socket->TransmitData(arr,blockNo,32);
+
     }
     if(blockNo == solancat+1){// truyen chuoi cuoi cung
         int i = 0;
@@ -334,8 +343,9 @@ void DialogFile::on_pushButton_clicked()
 //           }
         s.push_back(strChar[i]);
     }
-//    qDebug()<<s;
+    qDebug()<<s;
     ReadLine();
+
 
 }
 

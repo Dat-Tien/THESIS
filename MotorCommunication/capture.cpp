@@ -229,12 +229,13 @@ void capture::findContour(cv::Mat frame, std::vector<std::vector<cv::Point>> blo
         cv::Point2f cen;
         float radius;
         cv::minEnclosingCircle(contours[largest_contour_index],cen,radius);
+        qDebug()<<radius;
 
-        if(approx.size()==4)
+        if(approx.size()==4 && radius>46 && radius<52)
         {
             Q_EMIT rectangle();
         }
-        else if(approx.size()==6)
+        else if(approx.size()>6 && radius>70)
         {
             Q_EMIT hexagon();
         }
