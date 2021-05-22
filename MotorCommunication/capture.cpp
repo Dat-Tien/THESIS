@@ -299,7 +299,7 @@ void capture::findContour(cv::Mat frame, std::vector<std::vector<cv::Point>> blo
 
         //calculate x_cam,y_cam,z_cam,theta,distance
         float x_cam,y_cam,z_cam;
-        float dis = FindDistance(depthframe,center, x_cam,y_cam,z_cam );
+        dis = FindDistance(depthframe,center, x_cam,y_cam,z_cam );
         transfer(x_cam*1000,y_cam*1000,z_cam*1000,x_robot,y_robot,z_robot);
         if(z_robot <-42)
         {
@@ -309,19 +309,6 @@ void capture::findContour(cv::Mat frame, std::vector<std::vector<cv::Point>> blo
         {
             Q_EMIT fail();
         }
-
-        char text1[200], text2[200], text3[200];
-        sprintf(text1,"x:%.8f y:%.8f z:%.8f",x_cam*1000, y_cam*1000, z_cam*1000) ;
-        sprintf(text2, "theta:%.8f distance:%.8f", theta, dis);
-        sprintf(text3,"x:%.4f y:%.4f z:%.4f",x_robot,y_robot,z_robot);
-
-        cv::putText(draw_box, text1, cv::Point(30, 30), cv::FONT_HERSHEY_SIMPLEX,
-                0.5, cv::Scalar(0, 255, 0), 2);
-        cv::putText(draw_box, text2, cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX,
-                0.5, cv::Scalar(0, 255, 0), 2);
-        cv::putText(draw_box, text3, cv::Point(50, 70), cv::FONT_HERSHEY_SIMPLEX,
-                0.5, cv::Scalar(0, 255, 0), 2);
-
 
         cv::putText(draw_box, text_height,
             cv::Point2f(tltr.x - 15, tltr.y - 10), cv::FONT_HERSHEY_SIMPLEX,

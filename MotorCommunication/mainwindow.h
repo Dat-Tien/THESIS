@@ -23,6 +23,8 @@
 #include <QSizeGrip>
 #include <QMouseEvent>
 #include <QRubberBand>
+#include <QtSql>
+#include <QSqlDatabase>
 
 using namespace std;
 
@@ -173,29 +175,25 @@ private slots:
     void pass_height();
     void fail_height();
 
-    void on_displayImage_clicked();
+
 
     QImage cvMatToQImage(const cv::Mat &inMat);
     QPixmap cvMatToQPixmap(const cv::Mat &inMat);
     cv::Mat QImageToMat(QImage image);
 
-    void on_displayQPixmap_clicked();
+
 
     void on_camera_clicked();
 
-    void on_camera_off_clicked();
+
 
     void on_Get_Background_clicked();
 
     void on_Mask_clicked();
 
-    void on_chooseObject_clicked();
 
-    void on_pushButton_2_clicked();
 
-    void on_pushButton_3_clicked();
 
-    void on_pushButton11_clicked();
 
 //----------------------------------------------------------------
 
@@ -214,28 +212,26 @@ private slots:
 
 
 
-    void on_pushButtonWriteB_clicked();
-
-    void on_pushButtonWriteB_4_clicked();
-
-    void on_pushButtonVitrivat_clicked();
 
 
-    void on_pushButtonWriteB4_clicked();
+
+
+
+
+
 
     void on_pushButtonAuto_clicked();
 
-    void on_pushButtonNgat_clicked();
 
-    void on_pushButtonBat_clicked();
+
 
     void on_pushButtonTracking_clicked();
 
-    void on_pushButton_clicked();
+
 
     void on_ConveySpeed_currentIndexChanged(int index);
 
-    void on_pushButtonRun_clicked();
+
 
 
 
@@ -248,6 +244,14 @@ private slots:
     void on_pushButtonServoHOMING_clicked();
 
     void on_pushButtonServoSTARTSTOP_clicked();
+
+    void on_btnSerial_clicked();
+
+
+
+
+
+    void on_comboBoxImages_currentIndexChanged(int index);
 
 private:
     Ui::MainWindow *ui;

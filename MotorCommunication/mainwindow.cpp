@@ -58,12 +58,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(testWrite,SIGNAL(timeout()),this,SLOT(Test_Continues()));
 
     serial = new QSerialPort;
-    serial->setPortName("com4");
+
     serial->setBaudRate(QSerialPort::Baud115200);
     serial->setDataBits(QSerialPort::Data8);
     serial->setParity(QSerialPort::NoParity);
     serial->setStopBits(QSerialPort::OneStop);
-    serial->open(QIODevice::ReadOnly);
+
     connect(serial,SIGNAL(readyRead()),this,SLOT(ReadSerial()));
 
 
@@ -126,7 +126,8 @@ void MainWindow::fail_height()
 
 void MainWindow::ReadSerial()
 {
-    ui->SerialPort->setText(serial->readAll());
+
+    ui->textEdit_Serial->setText(serial->readAll());
 }
 
 void delay(int n)
@@ -1254,20 +1255,6 @@ std::vector<QString> MainWindow::TableValue(int row)
 }
 //------------------------------------------------------------
 
-void MainWindow::on_displayImage_clicked()
-{
-    Mat image = imread("E:/dog.jpg");
-    cv::putText(image, //target image
-                "Hello, OpenCV!", //text
-                cv::Point(10, image.rows / 2), //top-left position
-                cv::FONT_HERSHEY_DUPLEX,
-                1.0,
-                CV_RGB(118, 185, 0), //font color
-                2);
-    imshow("dog", image);
-    waitKey(0); // Wait for any keystroke in the window
-    destroyAllWindows();
-}
 
 QPixmap MainWindow:: cvMatToQPixmap( const cv::Mat &inMat )
    {
@@ -1361,25 +1348,25 @@ cv::Mat MainWindow::QImageToMat(QImage image)
     return mat;
 }
 
-void MainWindow::on_displayQPixmap_clicked()
-{
-    socket->WriteByte(6,1);
-}
 
 void MainWindow::on_camera_clicked()
 {
-    if(videoCapture->camera_running == false)
-    {
-        videoCapture->camera_running = true;
+    if(ui->camera->text() == "Camera ON"){
+        ui->camera->setText("Camera OFF");
+        if(videoCapture->camera_running == false)
+        {
+            videoCapture->camera_running = true;
+        }
+        videoCapture->start(QThread::HighPriority);
     }
-    videoCapture->start(QThread::HighPriority);
+    else if(ui->camera->text() == "Camera OFF")
+    {
+        ui->camera->setText("Camera ON");
+        videoCapture->stop();
+    }
 
 
-}
 
-void MainWindow::on_camera_off_clicked()
-{
-    videoCapture->stop();
 }
 
 Resize_RubberBand::Resize_RubberBand(QWidget *parent) : QWidget(parent) {
@@ -1455,35 +1442,28 @@ void MainWindow::on_Mask_clicked()
     }
 
     videoCapture->findcontour_ready =1;
-}
 
-void MainWindow::on_chooseObject_clicked()
-{
-    videoCapture->numberBlob = videoCapture->numberBlob + 1;
-}
+    while(true)
+    {
+        ui->tbxObjectX->setText(QString::number(videoCapture->x_robot,'f',4) + " mm");
+        ui->tbxObjectY->setText(QString::number(videoCapture->y_robot,'f',4)+ " mm");
+        ui->tbxObjectZ->setText(QString::number(videoCapture->z_robot,'f',4)+ " mm");
+        ui->tbxObjectTheta->setText(QString::number(videoCapture->theta,'f',4) + " deg");
 
-
-
-void MainWindow::on_pushButton_2_clicked()
-{
-    videoCapture->StreamOption = 1;
-}
-
-void MainWindow::on_pushButton_3_clicked()
-{
-    videoCapture->StreamOption = 0;
-}
-
-void MainWindow::on_pushButton11_clicked()
-{
-    socket->WriteByte(5,1);
+        delay(100);
+    }
 
 }
+
+
+
+
+
 
 void MainWindow::Test_Continues()
 {
 
-    double velog = ui->SerialPort->text().toDouble();
+    //double velog = ui->SerialPort->text().toDouble();
     //yrobot = yrobot + velog*t2*1000;
     int32_t index = 3;
      std::vector<int32_t> pos;
@@ -1507,50 +1487,16 @@ void MainWindow::Test_Continues()
            }
 }
 
-void MainWindow::on_pushButtonWriteB_clicked()
-{
-    std::vector<int32_t> pos;
-    pos.push_back(180000);
-    pos.push_back(50000);
-    pos.push_back(120000);
-    pos.push_back(1800000);
-    pos.push_back(0);
-    pos.push_back(0);
-    uint16_t index = 4;
-    socket->WriteVarPosition(index,pos);
-    uint16_t B02 = 2;
-    socket->WriteByte(B02,1);
-}
-void MainWindow::on_pushButtonWriteB_4_clicked()
-{
-    uint16_t B03 = 3;
-    socket->WriteByte(B03,1);
-    coutY = 0;
-    TimeWriteY->stop();
-}
-void MainWindow::on_pushButtonVitrivat_clicked()
-{
-    std::vector<int32_t> pos;
-    pos.push_back( videoCapture->x_robot*1000);
-    pos.push_back(videoCapture->y_robot*1000+ 50000);
-    pos.push_back(videoCapture->z_robot*1000);
-    pos.push_back(1800000);
-    pos.push_back(0);
-    pos.push_back(0);
-    uint16_t index = 4;
-    socket->WriteVarPosition(index,pos);
-}
-void MainWindow::on_pushButtonWriteB4_clicked()
-{
-    uint16_t B04 = 4;
-    socket->WriteByte(B04,1);
-}
+
+
+
+
 
 void MainWindow::on_pushButtonAuto_clicked()
 {
 
    while(1){
-       double velog = ui->SerialPort->text().toDouble();
+       double velog = ui->textEdit_Serial->toPlainText().toDouble();
        if(videoCapture->blobs.size() == 1){
            if(videoCapture->y_robot > -220 && videoCapture->y_robot<-190){
                xrobot = videoCapture->x_robot*1000;
@@ -1563,7 +1509,7 @@ void MainWindow::on_pushButtonAuto_clicked()
                pos.push_back(1800000);
                pos.push_back(0);
                pos.push_back(videoCapture->theta);
-               uint16_t index = 4;             
+               uint16_t index = 4;
                socket->WriteVarPosition(index,pos);
                uint16_t B02 = 2;
                socket->WriteByte(B02,1);
@@ -1580,30 +1526,25 @@ void MainWindow::on_pushButtonAuto_clicked()
 }
 
 
-void MainWindow::on_pushButtonNgat_clicked()
-{
-    socket->StopBothPos = true;
-    qDebug()<<"StopBothPos: "<<socket->StopBothPos;
-}
-void MainWindow::on_pushButtonBat_clicked()
-{
-    socket->StopBothPos = false;
-    qDebug()<<"StopBothPos: "<<socket->StopBothPos;
-}
+
+
 
 void MainWindow::on_pushButtonTracking_clicked()
 {
-    socket->start();
+    if(ui->btnConnected->text() == "Connected")
+    {
+       QMessageBox::information(this,"Warning!!!","Pleased Connect UDP first then Turn on Servo");
+    }
+    else if(ui->btnServo->text() == "ON Servo")
+    {
+        QMessageBox::information(this,"Warning!!!","Pleased turn on Servo");
+    }
+    else{
+        socket->start();
+    }
 }
 
-void MainWindow::on_pushButton_clicked()
-{
-   while(1){
 
-       delay(100);
-   }
-
-}
 void MainWindow::AddYrobot()
 {
     coutY += 1;
@@ -1613,24 +1554,24 @@ void MainWindow::AddYrobot()
 void MainWindow::on_ConveySpeed_currentIndexChanged(int index)
 {
     switch(index){
-    case 0:
+    case 1:
         t1 = 1.5185;
         t2 = 0.04;
         break;
-    case 1:
+    case 2:
         t1 = 1.5756;
         t2 = 0.04;
         break;
-    case 2:
+    case 3:
         t1 = 1.6387;
         t2 = 0.03;
         break;
-    case 3:
+    case 4:
         t1 = 1.704;
         t2 = 0.03;
-        qDebug()<<t1<<" "<<t2;
+
         break;
-    case 4:
+    case 5:
         t1 = 1.7868;
         t2 = 0.04;
     default:
@@ -1638,10 +1579,7 @@ void MainWindow::on_ConveySpeed_currentIndexChanged(int index)
     }
 }
 
-void MainWindow::on_pushButtonRun_clicked()
-{
 
-}
 
 
 
@@ -1652,18 +1590,18 @@ void MainWindow::on_pushButton_PLC_Conveyor_clicked()
         std::vector<uint16_t> data;
         data.push_back(1);
         ui->label_Conveyor->setText("START");
-        socket->PLC(QHostAddress("192.168.1.1"),10002,3,1,data);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),3,1,data);
         data.at(0) = 0;
-        socket->PLC(QHostAddress("192.168.1.1"),10002,3,1,data);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),3,1,data);
     }
     else if(ui->pushButton_PLC_Conveyor->text()=="OFF"){
         ui->pushButton_PLC_Conveyor->setText("ON");
         std::vector<uint16_t> data;
         data.push_back(1);
         ui->label_Conveyor->setText("STOP");
-        socket->PLC(QHostAddress("192.168.1.1"),10002,5,1,data);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),5,1,data);
         data.at(0)= 0;
-        socket->PLC(QHostAddress("192.168.1.1"),10002,5,1,data);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),5,1,data);
     }
 }
 
@@ -1671,20 +1609,21 @@ void MainWindow::on_pushButtonServoONOFF_clicked()
 {
     if(ui->pushButtonServoONOFF->text()=="ON"){
         ui->pushButtonServoONOFF->setText("OFF");
+        ui->label_MPE->setText("ON");
         std::vector<uint16_t> data;
         data.push_back(1);
-        ui->label_Conveyor->setText("START");
-        socket->PLC(QHostAddress("192.168.1.1"),10002,2,1,data);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),2,1,data);
         data.at(0) = 0;
-        socket->PLC(QHostAddress("192.168.1.1"),10002,4,1,data);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),4,1,data);
     }
     else if(ui->pushButtonServoONOFF->text()=="OFF"){
         ui->pushButtonServoONOFF->setText("ON");
+        ui->label_MPE->setText("OFF");
         std::vector<uint16_t> data;
         data.push_back(1);
-        socket->PLC(QHostAddress("192.168.1.1"),10002,4,1,data);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),4,1,data);
         data.at(0)= 0;
-        socket->PLC(QHostAddress("192.168.1.1"),10002,2,1,data);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),2,1,data);
     }
 }
 
@@ -1693,7 +1632,7 @@ void MainWindow::on_pushButtonServoHOMING_clicked()
 {
     std::vector<uint16_t> data;
     data.push_back(1);
-    socket->PLC(QHostAddress("192.168.1.1"),10002,6,1,data);
+    socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),6,1,data);
 }
 
 void MainWindow::on_pushButtonServoSTARTSTOP_clicked()
@@ -1702,16 +1641,50 @@ void MainWindow::on_pushButtonServoSTARTSTOP_clicked()
         ui->pushButtonServoSTARTSTOP->setText("STOP");
         std::vector<uint16_t> data;
         data.push_back(1);
-        socket->PLC(QHostAddress("192.168.1.1"),10002,7,1,data);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),7,1,data);
         data.at(0)= 0;
-        socket->PLC(QHostAddress("192.168.1.1"),10002,8,1,data);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),8,1,data);
     }
     else if(ui->pushButtonServoSTARTSTOP->text() == "STOP"){
         ui->pushButtonServoSTARTSTOP->setText("START");
         std::vector<uint16_t> data;
         data.push_back(1);
-        socket->PLC(QHostAddress("192.168.1.1"),10002,8,1,data);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),8,1,data);
         data.at(0)= 0;
-        socket->PLC(QHostAddress("192.168.1.1"),10002,7,1,data);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),7,1,data);
+    }
+}
+
+void MainWindow::on_btnSerial_clicked()
+{
+    if(ui->btnSerial->text()== "CONNECTED"){
+        ui->btnSerial->setText("DISCONNECTED");
+        ui->label_StatusSerial->setText("Connected");
+        serial->setPortName(ui->textEdit_SerialPort->toPlainText());
+        serial->open(QIODevice::ReadOnly);
+    }
+    else  if(ui->btnSerial->text()== "DISCONNECTED"){
+        ui->btnSerial->setText("CONNECTED");
+        ui->label_StatusSerial->setText("Not Connected");
+        serial->setPortName(ui->textEdit_SerialPort->toPlainText());
+        serial->close();
+    }
+
+}
+
+
+
+
+void MainWindow::on_comboBoxImages_currentIndexChanged(int index)
+{
+    switch(index){
+    case 1:
+         videoCapture->StreamOption = 0;
+        break;
+    case 2:
+        videoCapture->StreamOption = 1;
+        break;
+    default:
+        break;
     }
 }

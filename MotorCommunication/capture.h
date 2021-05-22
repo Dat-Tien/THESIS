@@ -36,6 +36,7 @@ public:
     bool findcontour_ready=0;
     bool measure_size = 0;
     double theta;
+    float dis;
 
     void run();
 
