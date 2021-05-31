@@ -21,7 +21,10 @@ using namespace rs2;
 std::vector<int32_t> Pos;
 int32_t str[6];
 
-
+// std::vector<double>posZ;
+//  std::vector<double>pos1;
+// std::vector<double>posY;
+// std::vector<double>Robot;
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -97,7 +100,7 @@ void MainWindow::detect_circle()
 }
 void MainWindow::detect_hexagon()
 {
-    ui->label_shape->setText("Hexagon");
+    ui->label_shape->setText("Unknown");
     shape = 7;
 }
 
@@ -156,6 +159,12 @@ void MainWindow::DisplayPosition()
     ui->tbxPitch->setText(QString::number((double)socket->ByteArray2Int32(socket->Get_rx_buffer(),68,4)/10000)+" deg");
     ui->tbxYaw->setText(QString::number((double)socket->ByteArray2Int32(socket->Get_rx_buffer(),72,4)/10000)  +" deg");
 
+    ui->textEditX->setText(QString::number((double)socket->ByteArray2Int32(socket->Get_rx_buffer(),52,4)/1000) +" mm");
+    ui->textEditY->setText(QString::number((double)socket->ByteArray2Int32(socket->Get_rx_buffer(),56,4)/1000) +" mm");
+    ui->textEditZ->setText(QString::number((double)socket->ByteArray2Int32(socket->Get_rx_buffer(),60,4)/1000) +" mm");
+    ui->textEditRx->setText(QString::number((double)socket->ByteArray2Int32(socket->Get_rx_buffer(),64,4)/10000) +" deg");
+    ui->textEditRy->setText(QString::number((double)socket->ByteArray2Int32(socket->Get_rx_buffer(),68,4)/10000)+" deg");
+    ui->textEditRz->setText(QString::number((double)socket->ByteArray2Int32(socket->Get_rx_buffer(),72,4)/10000)  +" deg");
 
 }
 void MainWindow::DisplayPulse()
@@ -206,7 +215,7 @@ void MainWindow::Read()
         Pos.clear();
         break;
     default:
-        ui->textBrowser111->setText(QString::number(double(stop-start)/CLOCKS_PER_SEC*1000));
+        //ui->textBrowser111->setText(QString::number(double(stop-start)/CLOCKS_PER_SEC*1000));
         break;
     }
 }
@@ -548,7 +557,7 @@ void MainWindow::on_btnPlayback_clicked()
                uint32_t Ry = table->item(count,PosRy)->text().toUInt();
                uint32_t Rz = table->item(count,PosRz)->text().toUInt();
                socket->WritePosPulse(speed,X,Y,Z,Rx,Ry,Rz);
-               qDebug()<<count;
+               //qDebug()<<count;
                Waiting();
                count+=1;
                 if(count == row){
@@ -1443,18 +1452,7 @@ void MainWindow::on_Mask_clicked()
 
     videoCapture->findcontour_ready =1;
 
-    while(true)
-    {
-        ui->tbxObjectX->setText(QString::number(videoCapture->x_robot,'f',4) + " mm");
-        ui->tbxObjectY->setText(QString::number(videoCapture->y_robot,'f',4)+ " mm");
-        ui->tbxObjectZ->setText(QString::number(videoCapture->z_robot,'f',4)+ " mm");
-        ui->tbxObjectTheta->setText(QString::number(videoCapture->theta,'f',4) + " deg");
-
-        delay(100);
-    }
-
-}
-
+ }
 
 
 
@@ -1462,14 +1460,17 @@ void MainWindow::on_Mask_clicked()
 
 void MainWindow::Test_Continues()
 {
-
-    //double velog = ui->SerialPort->text().toDouble();
-    //yrobot = yrobot + velog*t2*1000;
+    ui->tbxObjectX->setText(QString::number(videoCapture->x_robot,'f',4) + " mm");
+    ui->tbxObjectY->setText(QString::number(videoCapture->y_robot,'f',4)+ " mm");
+    ui->tbxObjectZ->setText(QString::number(videoCapture->z_robot,'f',4)+ " mm");
+    ui->tbxObjectTheta->setText(QString::number(videoCapture->theta,'f',4) + " deg");
+    double velog = ui->textEdit_Serial->toPlainText().toDouble();
+    yrobot = yrobot + velog*t2*1000;
     int32_t index = 3;
      std::vector<int32_t> pos;
         pos.push_back(xrobot);
         pos.push_back(yrobot);
-        pos.push_back(zrobot - 4000);
+        pos.push_back(zrobot -5000);
         pos.push_back(str[3]);
         pos.push_back(str[4]);
         pos.push_back(str[5]);
@@ -1481,16 +1482,24 @@ void MainWindow::Test_Continues()
        //qDebug()<<shape;
 
        ui->textEdiddis->setText(QString::number(shape));
+     //  ui->textBrowser111->setText(QString::number(distance));
 
-       if( distance <=5*1000) {
+       if( distance <=8*1000) {
            socket->WriteByte(shape,1);
            }
+
+//       pos1.push_back(videoCapture->x_robot);
+//       qDebug()<<"Pos X "<<pos1;
+
+//       posZ.push_back(videoCapture->z_robot);
+//       qDebug()<<"Pos Z "<<posZ;
+//       posY.push_back(videoCapture->y_robot);
+//       qDebug()<<"Pos Y "<<posY;
+//       for(int i=0;i<3;i++){
+//           Robot.push_back(str[i]/1000);
+//       }
+//       qDebug()<<"Robot "<<Robot;
 }
-
-
-
-
-
 
 void MainWindow::on_pushButtonAuto_clicked()
 {
@@ -1498,26 +1507,29 @@ void MainWindow::on_pushButtonAuto_clicked()
    while(1){
        double velog = ui->textEdit_Serial->toPlainText().toDouble();
        if(videoCapture->blobs.size() == 1){
-           if(videoCapture->y_robot > -220 && videoCapture->y_robot<-190){
+           if(videoCapture->y_robot > -220 && videoCapture->y_robot<-190 && videoCapture->z_robot <-39){
                xrobot = videoCapture->x_robot*1000;
-               yrobot = videoCapture->y_robot*1000 + velog*t1*1000;
+               yrobot = videoCapture->y_robot*1000 + velog*(t1+0.1)*1000;
                zrobot = videoCapture->z_robot*1000;
                std::vector<int32_t> pos;
                pos.push_back(videoCapture->x_robot*1000);
-               pos.push_back(videoCapture->y_robot*1000 + velog*t1*1000);
+               pos.push_back(videoCapture->y_robot*1000 + velog*(t1+0.1)*1000);
                pos.push_back(videoCapture->z_robot*1000 );
                pos.push_back(1800000);
                pos.push_back(0);
-               pos.push_back(videoCapture->theta);
+               pos.push_back(videoCapture->theta*10000);
+//               delay((t1-0.9)*1000);
                uint16_t index = 4;
                socket->WriteVarPosition(index,pos);
                uint16_t B02 = 2;
                socket->WriteByte(B02,1);
-               delay(t1*1000);
+               delay((t1+0.2)*1000);
                uint16_t B04 = 4;
                socket->WriteByte(B04,1);
            }
+
        }
+
        else {
            qDebug()<<"khong co vat";
            delay(1000);
@@ -1560,20 +1572,23 @@ void MainWindow::on_ConveySpeed_currentIndexChanged(int index)
         break;
     case 2:
         t1 = 1.5756;
-        t2 = 0.04;
+        t2 = 0.01;
         break;
     case 3:
-        t1 = 1.6387;
-        t2 = 0.03;
+        t1 = 0.53111;
+                //1.6387;
+        t2 = 0.018;
         break;
     case 4:
-        t1 = 1.704;
-        t2 = 0.03;
+        t1 = 0.5591;
+                //1.704;
+        t2 = 0.0431;
 
         break;
     case 5:
-        t1 = 1.7868;
-        t2 = 0.04;
+        t1 = 0.59046;
+                //1.7868;
+        t2 = 0.0586;
     default:
         break;
     }
@@ -1589,7 +1604,7 @@ void MainWindow::on_pushButton_PLC_Conveyor_clicked()
         ui->pushButton_PLC_Conveyor->setText("OFF");
         std::vector<uint16_t> data;
         data.push_back(1);
-        ui->label_Conveyor->setText("START");
+
         socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),3,1,data);
         data.at(0) = 0;
         socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),3,1,data);
@@ -1609,7 +1624,7 @@ void MainWindow::on_pushButtonServoONOFF_clicked()
 {
     if(ui->pushButtonServoONOFF->text()=="ON"){
         ui->pushButtonServoONOFF->setText("OFF");
-        ui->label_MPE->setText("ON");
+
         std::vector<uint16_t> data;
         data.push_back(1);
         socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),2,1,data);
@@ -1618,7 +1633,7 @@ void MainWindow::on_pushButtonServoONOFF_clicked()
     }
     else if(ui->pushButtonServoONOFF->text()=="OFF"){
         ui->pushButtonServoONOFF->setText("ON");
-        ui->label_MPE->setText("OFF");
+
         std::vector<uint16_t> data;
         data.push_back(1);
         socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),4,1,data);
@@ -1633,12 +1648,15 @@ void MainWindow::on_pushButtonServoHOMING_clicked()
     std::vector<uint16_t> data;
     data.push_back(1);
     socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),6,1,data);
+    data.at(0) = 0;
+    socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),6,1,data);
 }
 
 void MainWindow::on_pushButtonServoSTARTSTOP_clicked()
 {
     if(ui->pushButtonServoSTARTSTOP->text() == "START"){
         ui->pushButtonServoSTARTSTOP->setText("STOP");
+
         std::vector<uint16_t> data;
         data.push_back(1);
         socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),7,1,data);
@@ -1647,6 +1665,7 @@ void MainWindow::on_pushButtonServoSTARTSTOP_clicked()
     }
     else if(ui->pushButtonServoSTARTSTOP->text() == "STOP"){
         ui->pushButtonServoSTARTSTOP->setText("START");
+
         std::vector<uint16_t> data;
         data.push_back(1);
         socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),8,1,data);
@@ -1687,4 +1706,27 @@ void MainWindow::on_comboBoxImages_currentIndexChanged(int index)
     default:
         break;
     }
+}
+
+void MainWindow::on_pushButtonServoPAUSE_clicked()
+{
+    if(ui->pushButtonServoPAUSE->text() == "PAUSING"){
+        ui->pushButtonServoPAUSE->setText("RUNNING");
+         ui->label_Conveyor->setText("PAUSING");
+        std::vector<uint16_t> data;
+        data.push_back(1);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),9,1,data);
+        data.at(0)= 0;
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),10,1,data);
+    }
+    else if(ui->pushButtonServoPAUSE->text() == "RUNNING"){
+         ui->pushButtonServoPAUSE->setText("PAUSING");
+          ui->label_Conveyor->setText("RUNNING");
+        std::vector<uint16_t> data;
+        data.push_back(1);
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),10,1,data);
+        data.at(0)= 0;
+        socket->PLC(QHostAddress(ui->tbxIPMPE->toPlainText()),ui->tbxPortMPE->toPlainText().toInt(),9,1,data);
+    }
+
 }

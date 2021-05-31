@@ -253,6 +253,8 @@ private slots:
 
     void on_comboBoxImages_currentIndexChanged(int index);
 
+    void on_pushButtonServoPAUSE_clicked();
+
 private:
     Ui::MainWindow *ui;
 
@@ -268,6 +270,7 @@ private:
 
     QTimer *TransPosX;
     QTimer *TimeWriteY;
+
 
 
 
@@ -289,6 +292,8 @@ private:
     void addRy();
     void subtractRz();
     void addRz();
+
+
 
 
 

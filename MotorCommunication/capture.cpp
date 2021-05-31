@@ -147,7 +147,7 @@ void transfer(float x_cam, float y_cam, float z_cam, float &x_robot, float &y_ro
     float T[4][4] =
           {
         {0.03037785743,  0.9995033893,  0.008376186877,  255.5757974},
-        {0.9993555291,  -0.0302108997,  -0.01938628351,  -271.3832071},
+        {0.9993555291,  -0.0302108997,  -0.01938628351,  -271.3832071},// y+22
         {-0.01912360393,  0.008959702424,  -0.9997769809,  257.2911586},
         {0,  0,  0,  1}
     };
@@ -229,9 +229,9 @@ void capture::findContour(cv::Mat frame, std::vector<std::vector<cv::Point>> blo
         cv::Point2f cen;
         float radius;
         cv::minEnclosingCircle(contours[largest_contour_index],cen,radius);
-        qDebug()<<radius;
+       // qDebug()<<radius;
 
-        if(approx.size()==4 && radius>46 && radius<52)
+        if(approx.size()==4)
         {
             Q_EMIT rectangle();
         }
@@ -301,7 +301,7 @@ void capture::findContour(cv::Mat frame, std::vector<std::vector<cv::Point>> blo
         float x_cam,y_cam,z_cam;
         dis = FindDistance(depthframe,center, x_cam,y_cam,z_cam );
         transfer(x_cam*1000,y_cam*1000,z_cam*1000,x_robot,y_robot,z_robot);
-        if(z_robot <-42)
+        if(z_robot <-38)
         {
             Q_EMIT pass();
         }
